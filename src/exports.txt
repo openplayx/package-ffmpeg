@@ -1,0 +1,10 @@
+_opx_media_abi_version
+_opx_media_capabilities
+_opx_media_probe
+_opx_media_string_free
+_opx_media_job_create
+_opx_media_job_start
+_opx_media_job_poll
+_opx_media_job_cancel
+_opx_media_job_join
+_opx_media_job_destroy

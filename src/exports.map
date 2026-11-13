@@ -1,0 +1,4 @@
+{
+  global: opx_media_*;
+  local: *;
+};
