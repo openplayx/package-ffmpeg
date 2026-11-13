@@ -5,3 +5,6 @@ pubspec.lock
 .flutter-plugins-dependencies
 # Pinned FFmpeg sources/builds are produced by tool/build_ffmpeg.sh
 third_party/
+# Android native build caches (CMake/NDK, Gradle)
+android/.cxx/
+android/.gradle/
