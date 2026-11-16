@@ -8,6 +8,9 @@
 # targets: macos-arm64 macos-x86_64 ios-arm64 ios-sim-arm64
 #          android-arm64-v8a android-armeabi-v7a android-x86_64
 #          linux-x86_64 linux-arm64
+#          windows-x86_64  (MSYS2 bash/make + MinGW-w64 gcc; shared DLLs whose import
+#                           libraries the MSVC-built plugin links, so C runtimes
+#                           are never mixed inside one module)
 #
 # Output: third_party/ffmpeg/<target>/{include,lib}  (git-ignored)
 set -euo pipefail
@@ -103,6 +106,41 @@ case "$target" in
   linux-*)
     command -v nasm >/dev/null || extra+=(--disable-x86asm)
     ;;
+  windows-x86_64)
+    # zlib (PNG codecs) is not part of MinGW-w64: build a pinned static copy.
+    ZLIB_VERSION=1.3.1
+    ZLIB_SHA256=9a93b2b7dfdac77ceba5a558a580e74667dd6fede4585b91eefb60f03b72df23
+    zlib_tar="$work/src/zlib-$ZLIB_VERSION.tar.gz"
+    zlib_prefix="$work/build/zlib-$target"
+    if [ ! -f "$zlib_prefix/lib/libz.a" ]; then
+      [ -f "$zlib_tar" ] || curl -fL --retry 3 -o "$zlib_tar" \
+        "https://github.com/madler/zlib/releases/download/v$ZLIB_VERSION/zlib-$ZLIB_VERSION.tar.gz"
+      zsum="$(sha256sum "$zlib_tar" 2>/dev/null || shasum -a 256 "$zlib_tar")"
+      [ "${zsum%% *}" = "$ZLIB_SHA256" ] || { echo "zlib tarball checksum mismatch" >&2; exit 1; }
+      rm -rf "$work/build/zlib-src" && mkdir -p "$work/build/zlib-src"
+      tar -xzf "$zlib_tar" -C "$work/build/zlib-src" --strip-components=1
+      (cd "$work/build/zlib-src" && mingw32-make -f win32/Makefile.gcc libz.a >/dev/null &&
+        mkdir -p "$zlib_prefix/lib" "$zlib_prefix/include" &&
+        cp libz.a "$zlib_prefix/lib/" && cp zlib.h zconf.h "$zlib_prefix/include/")
+    fi
+    # Shared instead of static (see header); libgcc/winpthread linked in statically.
+    common=("${common[@]/--enable-static/--disable-static}")
+    common=("${common[@]/--disable-shared/--enable-shared}")
+    # The native compiler needs C:/... paths; Git Bash tools keep /c/... paths.
+    zlib_native="$zlib_prefix"
+    command -v cygpath >/dev/null 2>&1 && zlib_native="$(cygpath -m "$zlib_prefix")"
+    extra+=(--target-os=mingw32 --arch=x86_64 --cc=gcc
+      --extra-cflags="-I$zlib_native/include"
+      --extra-ldflags="-L$zlib_native/lib -static-libgcc -static")
+    command -v nasm >/dev/null || extra+=(--disable-x86asm)
+    # Preferred: MSYS2 bash + make (FFmpeg's documented Windows setup). Without a
+    # Unix make, mingw32-make is native and needs C:/... paths in the generated
+    # Makefiles (configure derives its source path with pwd: rewritten afterwards).
+    if ! command -v make >/dev/null 2>&1; then
+      common=("${common[@]/--prefix=$prefix/--prefix=$(cygpath -m "$prefix")}")
+      native_src="$(cygpath -m "$src")"
+    fi
+    ;;
   *) echo "unknown target $target" >&2; exit 1 ;;
 esac
 
@@ -111,8 +149,13 @@ rm -rf "$build" "$prefix"
 mkdir -p "$build"
 cd "$build"
 "$src/configure" "${common[@]}" "${extra[@]}" > configure.log
-make -j"$(sysctl -n hw.ncpu 2>/dev/null || nproc)" > make.log
-make install > install.log
+if [ -n "${native_src:-}" ]; then
+  sed -i "s#$src#$native_src#g" Makefile ffbuild/config.mak
+fi
+make_cmd=make
+command -v make >/dev/null 2>&1 || make_cmd=mingw32-make
+"$make_cmd" -j"$(sysctl -n hw.ncpu 2>/dev/null || nproc)" > make.log
+"$make_cmd" install > install.log
 {
   echo "version=$FFMPEG_VERSION"
   echo "sha256=$FFMPEG_SHA256"

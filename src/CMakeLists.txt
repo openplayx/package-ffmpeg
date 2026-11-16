@@ -16,7 +16,25 @@ endif()
 set(OPX_FFMPEG_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/../third_party/ffmpeg/${OPX_FFMPEG_TARGET}"
     CACHE PATH "Pinned FFmpeg install prefix")
 
-if(EXISTS "${OPX_FFMPEG_PREFIX}/lib/libavformat.a")
+file(GLOB OPX_FFMPEG_WINDOWS_DLLS "${OPX_FFMPEG_PREFIX}/bin/*.dll")
+if(WIN32 AND OPX_FFMPEG_WINDOWS_DLLS)
+  # FFmpeg DLLs built with MinGW-w64 (tool/build_ffmpeg.sh windows-x86_64); this
+  # MSVC-built bridge links their import libraries, and the DLLs are bundled next
+  # to the app (see windows/CMakeLists.txt).
+  add_library(openplayx_ffmpeg SHARED "opx_media.c")
+  target_include_directories(openplayx_ffmpeg PRIVATE "${OPX_FFMPEG_PREFIX}/include")
+  foreach(lib avformat avcodec swscale swresample avutil)
+    if(EXISTS "${OPX_FFMPEG_PREFIX}/lib/${lib}.lib")
+      target_link_libraries(openplayx_ffmpeg PRIVATE "${OPX_FFMPEG_PREFIX}/lib/${lib}.lib")
+    else()
+      target_link_libraries(openplayx_ffmpeg PRIVATE "${OPX_FFMPEG_PREFIX}/lib/lib${lib}.dll.a")
+    endif()
+  endforeach()
+  get_directory_property(OPX_FFMPEG_HAS_PARENT PARENT_DIRECTORY)
+  if(OPX_FFMPEG_HAS_PARENT)
+    set(OPX_FFMPEG_RUNTIME_DLLS ${OPX_FFMPEG_WINDOWS_DLLS} PARENT_SCOPE)
+  endif()
+elseif(NOT WIN32 AND EXISTS "${OPX_FFMPEG_PREFIX}/lib/libavformat.a")
   add_library(openplayx_ffmpeg SHARED "opx_media.c")
   target_include_directories(openplayx_ffmpeg PRIVATE "${OPX_FFMPEG_PREFIX}/include")
   set(libs avformat avcodec swscale swresample avutil)
