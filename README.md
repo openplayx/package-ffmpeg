@@ -37,7 +37,7 @@ final result = await job.done;                 // validated output, or a MediaEr
 | Android / Linux | `src/CMakeLists.txt` links `third_party/ffmpeg/<target>` with a version script that keeps libav symbols private. Without that build it compiles `opx_media_stub.c`, so the app still builds and capabilities report `available: false`. Android needs `ANDROID_NDK_HOME` set for `build_ffmpeg.sh android-<abi>`. |
 | Windows | Builds the stub until a Windows FFmpeg build is added. |
 
-Verified so far: macOS arm64 (host tests, and an integration test inside the sandboxed app bundle). The iOS, Android, Linux and Windows scripts exist but are not yet verified.
+Verified so far: macOS arm64 (host tests, and an integration test inside the sandboxed app bundle). iOS simulator and Android emulator (arm64-v8a, API 37): the app's `ffmpeg_bridge_test` integration test passes; armeabi-v7a and x86_64 link and package. The Linux and Windows scripts exist but are not yet verified.
 
 ## Tests
 
