@@ -57,3 +57,8 @@ flutter test             # real native probe/snapshot/remux/transcode/cancel tes
 ## License
 
 The bundled FFmpeg is built LGPL-only (no `--enable-gpl` or `--enable-nonfree`). When distributing, ship the FFmpeg source for the pinned version, the configure line from `BUILDINFO` and the LGPL text. See <https://ffmpeg.org/legal.html>.
+
+## Sources and acknowledgements
+
+See [SOURCES.md](SOURCES.md) for upstream sources, build references, pinned
+dependencies and the preserved license texts in [LICENSES/](LICENSES/).
