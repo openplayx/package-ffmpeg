@@ -1,0 +1,3 @@
+# Build scripts and their input manifests are consumed by Bash on Windows too.
+*.sh text eol=lf
+*.tsv text eol=lf
