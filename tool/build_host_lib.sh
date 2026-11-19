@@ -11,21 +11,21 @@ case "$(uname -s)-$(uname -m)" in
   *) echo "unsupported host" >&2; exit 1 ;;
 esac
 prefix="$root/third_party/ffmpeg/$target"
-[ -f "$prefix/lib/libavformat.a" ] || "$root/tool/build_ffmpeg.sh" "$target"
+bash "$root/tool/build_ffmpeg.sh" "$target"
 mkdir -p "$root/build/host"
-libs="-L$prefix/lib -lavformat -lavcodec -lswscale -lswresample -lavutil -lz"
+libs="-L$prefix/lib -lavformat -lavcodec -lswscale -lswresample -lavutil -laom -lx264 -lx265 -lvpx -lmp3lame -lopus -lxml2 -lz"
 if [ "$(uname -s)" = Darwin ]; then
   out="$root/build/host/libopenplayx_ffmpeg.dylib"
   clang -O2 -Wall -fvisibility=hidden -shared -I"$prefix/include" \
     "$root/src/opx_media.c" $libs \
     -framework VideoToolbox -framework CoreMedia -framework CoreVideo \
     -framework CoreFoundation -framework CoreServices -framework Security \
-    -framework AudioToolbox \
+    -framework AudioToolbox -lc++ \
     -Wl,-exported_symbols_list,"$root/src/exports.txt" -o "$out"
 else
   out="$root/build/host/libopenplayx_ffmpeg.so"
   cc -O2 -Wall -fPIC -fvisibility=hidden -shared -I"$prefix/include" \
-    "$root/src/opx_media.c" $libs -lm -lpthread \
+    "$root/src/opx_media.c" $libs -lm -lpthread -lstdc++ \
     -Wl,--version-script="$root/src/exports.map" -Wl,-Bsymbolic -o "$out"
 fi
 echo "$out"

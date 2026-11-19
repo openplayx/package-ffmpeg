@@ -2,7 +2,7 @@
 # libraries from tool/build_ffmpeg.sh when present; otherwise builds the
 # stub so the host app still builds and reports the module as unavailable.
 cmake_minimum_required(VERSION 3.10)
-project(openplayx_ffmpeg_library VERSION 0.1.0 LANGUAGES C)
+project(openplayx_ffmpeg_library VERSION 0.1.0 LANGUAGES C CXX)
 
 if(ANDROID)
   set(OPX_FFMPEG_TARGET "android-${ANDROID_ABI}")
@@ -37,11 +37,12 @@ if(WIN32 AND OPX_FFMPEG_WINDOWS_DLLS)
 elseif(NOT WIN32 AND EXISTS "${OPX_FFMPEG_PREFIX}/lib/libavformat.a")
   add_library(openplayx_ffmpeg SHARED "opx_media.c")
   target_include_directories(openplayx_ffmpeg PRIVATE "${OPX_FFMPEG_PREFIX}/include")
-  set(libs avformat avcodec swscale swresample avutil)
+  set(libs avformat avcodec swscale swresample avutil aom x264 x265 vpx mp3lame opus xml2)
   foreach(lib ${libs})
     target_link_libraries(openplayx_ffmpeg PRIVATE "${OPX_FFMPEG_PREFIX}/lib/lib${lib}.a")
   endforeach()
   target_link_libraries(openplayx_ffmpeg PRIVATE z m)
+  set_target_properties(openplayx_ffmpeg PROPERTIES LINKER_LANGUAGE CXX)
   if(ANDROID)
     target_link_libraries(openplayx_ffmpeg PRIVATE log mediandk android)
     target_link_options(openplayx_ffmpeg PRIVATE "-Wl,-z,max-page-size=16384")

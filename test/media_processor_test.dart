@@ -100,6 +100,116 @@ void main() {
     expect(probe.primaryVideo!.width, greaterThan(0));
   }, skip: skip);
 
+  test(
+    'expanded build exposes the Build codec and container formats',
+    () async {
+      final caps = await processor.capabilities();
+      expect(
+        caps.encoders,
+        containsAll([
+          'libx264',
+          'libx265',
+          'libaom-av1',
+          'libvpx',
+          'libvpx-vp9',
+          'libmp3lame',
+          'libopus',
+          'aac',
+        ]),
+      );
+      expect(
+        caps.decoders,
+        containsAll([
+          'libaom-av1',
+          'h264',
+          'hevc',
+          'vp8',
+          'vp9',
+          'mp3',
+          'opus',
+          'aac',
+        ]),
+      );
+      expect(
+        caps.muxers,
+        containsAll(['mp4', 'webm', 'ogg', 'opus', 'ivf', 'dash']),
+      );
+      final probe = await processor.probe(video);
+      final plan = MediaPlanner.plan(
+        MediaPreset.mobile720p,
+        probe,
+        caps,
+        const PlanRequest(hardware: HardwarePreference.software),
+      );
+      expect(plan.values['video_codec'], 'libx264');
+    },
+    skip: skip,
+  );
+
+  for (final entry in {
+    'libx264': ('h264', 'mp4'),
+    'libx265': ('hevc', 'mp4'),
+    'libaom-av1': ('av1', 'mp4'),
+    'libvpx': ('vp8', 'webm'),
+    'libvpx-vp9': ('vp9', 'webm'),
+    'libmp3lame': ('mp3', 'mp3'),
+    'libopus': ('opus', 'opus'),
+  }.entries) {
+    test(
+      '${entry.key} encodes and its output decodes',
+      () async {
+        final audio = entry.key == 'libmp3lame' || entry.key == 'libopus';
+        final input = audio ? _writeWav(tmp).path : video;
+        final probe = await processor.probe(input);
+        final (codec, extension) = entry.value;
+        final output = '${tmp.path}/encoded.$extension';
+        final plan = MediaPlan(
+          MediaPreset.mobile720p,
+          extension,
+          {
+            'operation': 'transcode',
+            'format': extension,
+            'video_stream': audio ? -1 : probe.primaryVideo!.index,
+            'audio_stream': audio ? probe.primaryAudio!.index : -1,
+            'subtitle_stream': -1,
+            'video_mode': audio ? 'none' : 'encode',
+            'audio_mode': audio ? 'encode' : 'none',
+            'subtitle_mode': 'none',
+            if (audio) 'audio_codec': entry.key else 'video_codec': entry.key,
+            'sample_rate': 48000,
+            'channels': 2,
+            'start_us': 0,
+            'end_us': 500000,
+            'timeout_ms': 120000,
+          },
+          expects: {audio ? 'audio' : 'video'},
+        );
+        final result = await processor
+            .submit(plan, input: input, output: output)
+            .done;
+        expect(result.succeeded, isTrue, reason: '${result.error}');
+        final encoded = await processor.probe(output);
+        final stream = audio ? encoded.primaryAudio : encoded.primaryVideo;
+        expect(stream?.codec, codec);
+        expect(stream?.decodable, isTrue);
+        // Decode real output pixels, rather than just trusting codec registration.
+        if (!audio) {
+          final snap = await run(
+            MediaPreset.imagePreview,
+            output,
+            const PlanRequest(time: Duration.zero),
+          );
+          expect(snap.succeeded, isTrue, reason: '${snap.error}');
+        } else {
+          final decoded = await run(MediaPreset.speechWav, output);
+          expect(decoded.succeeded, isTrue, reason: '${decoded.error}');
+        }
+      },
+      skip: skip,
+      timeout: const Timeout(Duration(minutes: 3)),
+    );
+  }
+
   test('snapshot writes a JPEG at the requested time', () async {
     final probe = await processor.probe(video);
     final result = await run(

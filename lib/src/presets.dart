@@ -169,12 +169,14 @@ abstract final class MediaPlanner {
 
   static String? _videoEncoder(MediaCapabilities c, HardwarePreference pref) {
     final hw = c.hardwareVideoEncoder;
+    final software = [
+      'libx264',
+      'mpeg4',
+    ].where(c.encoders.contains).firstOrNull;
     return switch (pref) {
       HardwarePreference.hardware => hw,
-      HardwarePreference.software =>
-        c.encoders.contains('mpeg4') ? 'mpeg4' : null,
-      HardwarePreference.auto =>
-        hw ?? (c.encoders.contains('mpeg4') ? 'mpeg4' : null),
+      HardwarePreference.software => software,
+      HardwarePreference.auto => hw ?? software,
     };
   }
 

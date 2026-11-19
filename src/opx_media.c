@@ -424,6 +424,12 @@ static int encoder_usable(const char *name) {
   if (strcmp(name, "png") == 0) ctx->pix_fmt = AV_PIX_FMT_RGB24;
   if (strcmp(name, "mjpeg") == 0) ctx->pix_fmt = AV_PIX_FMT_YUVJ420P;
   ctx->bit_rate = 1000000;
+  ctx->thread_count = 2;
+  if (!strcmp(name, "libx265")) {
+    // x265 otherwise creates a machine-wide worker pool just to probe an
+    // encoder, and its own logger bypasses FFmpeg's configured log level.
+    av_opt_set(ctx->priv_data, "x265-params", "pools=none:log-level=error", 0);
+  }
   int ok = avcodec_open2(ctx, codec, NULL) >= 0;
   avcodec_free_context(&ctx);
   return ok;
@@ -433,9 +439,10 @@ char *opx_media_capabilities(void) {
   global_init();
   static const char *encoders[] = {"h264_videotoolbox", "h264_mediacodec",
                                    "mpeg4", "aac", "pcm_s16le", "png",
-                                   "mjpeg"};
+                                   "mjpeg", "libx264", "libx265", "libaom-av1",
+                                   "libvpx", "libvpx-vp9", "libmp3lame", "libopus"};
   static const char *muxers[] = {"mp4", "ipod", "matroska", "wav", "mp3",
-                                 "flac"};
+                                 "flac", "webm", "ogg", "opus", "ivf", "dash"};
   sbuf b = {0};
   sb_printf(&b, "{\"abi\":%d,\"ffmpeg\":", OPX_MEDIA_ABI);
   sb_json(&b, av_version_info());
@@ -944,6 +951,8 @@ static int setup_video_encoder(worker *w, track *t, AVStream *ist,
   enc->gop_size = (int)(av_q2d(fr) * 2 + 0.5);
   enc->max_b_frames = 0;
   enc->thread_count = 4;
+  if (!strcmp(name, "libx265"))
+    av_opt_set(enc->priv_data, "x265-params", "pools=4:log-level=error", 0);
   enc->color_primaries = t->dec->color_primaries;
   enc->color_trc = t->dec->color_trc;
   enc->colorspace = t->dec->colorspace;

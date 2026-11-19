@@ -11,7 +11,9 @@ case "${PLATFORM_NAME:-macosx}" in
 esac
 for arch in ${ARCHS:-arm64}; do
   target="$prefix-$arch"
-  if [ ! -f "$root/third_party/ffmpeg/$target/lib/libavformat.a" ]; then
+  expected="$(bash "$root/tool/build_fingerprint.sh" "$target")"
+  stamp="$root/third_party/ffmpeg/$target/BUILD_FINGERPRINT"
+  if [ ! -f "$root/third_party/ffmpeg/$target/lib/libavformat.a" ] || [ ! -f "$stamp" ] || [ "$(cat "$stamp")" != "$expected" ]; then
     # Xcode's environment would leak SDK settings into FFmpeg's configure.
     env -i PATH="/usr/bin:/bin:/usr/sbin:/sbin:/opt/homebrew/bin:/usr/local/bin" \
       HOME="$HOME" DEVELOPER_DIR="${DEVELOPER_DIR:-}" \
