@@ -1,6 +1,7 @@
 name: openplayx_ffmpeg
 description: In-process FFmpeg media processing (probe, snapshot, remux, transcode) for OpenPlayX through a small FFI C ABI. No ffmpeg/ffprobe processes.
 publish_to: none
+repository: https://github.com/openplayx/package-ffmpeg
 version: 0.1.0
 environment:
   sdk: ^3.13.7

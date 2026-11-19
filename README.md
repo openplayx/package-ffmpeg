@@ -2,6 +2,14 @@
 
 OpenPlayX's in-process FFmpeg media processing package (Flutter FFI plugin).
 
+Public repository: [openplayx/package-ffmpeg](https://github.com/openplayx/package-ffmpeg).
+The Dart package name remains `openplayx_ffmpeg`. Clone into `ffmpeg-package`
+next to the app to preserve its existing pubspec path and CI checkout name:
+
+```sh
+git clone https://github.com/openplayx/package-ffmpeg.git ffmpeg-package
+```
+
 ```
 Dart (MediaProcessor) → dart:ffi → opx_media_* C ABI (src/opx_media.c)
                       → libavformat / libavcodec / libswscale / libswresample

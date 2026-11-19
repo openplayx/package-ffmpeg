@@ -6,7 +6,7 @@ Pod::Spec.new do |s|
   s.name = 'openplayx_ffmpeg'
   s.version = '0.1.0'
   s.summary = 'OpenPlayX in-process FFmpeg media processing'
-  s.homepage = 'https://github.com/openplayx/openplayx'
+  s.homepage = 'https://github.com/openplayx/package-ffmpeg'
   s.license = { :type => 'LGPL-2.1-or-later' }
   s.author = 'OpenPlayX'
   s.source = { :path => '.' }
