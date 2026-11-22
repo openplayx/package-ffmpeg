@@ -59,7 +59,7 @@ New encoders are reported by `capabilities()` and usable by host-owned `MediaPla
 
 | Platform | How it links |
 |---|---|
-| macOS / iOS | The podspec compiles the C ABI. A build phase runs `tool/ensure_ffmpeg_apple.sh`, which builds the missing arch on first build. Only `opx_media_*` is exported (`src/exports.txt`), so libav symbols cannot clash with libVLC. |
+| macOS / iOS / tvOS | The podspec compiles the C ABI. A build phase runs `tool/ensure_ffmpeg_apple.sh`, which builds the missing arch on first build. Only `opx_media_*` is exported (`src/exports.txt`), so libav symbols cannot clash with libVLC. |
 | Android / Linux | `src/CMakeLists.txt` links `third_party/ffmpeg/<target>` with a version script that keeps libav symbols private. Without that build it compiles `opx_media_stub.c`, so the app still builds and capabilities report `available: false`. Android needs `ANDROID_NDK_HOME` set for `build_ffmpeg.sh android-<abi>`. |
 | Windows | Links MinGW-built FFmpeg DLLs via import libraries; dependency archives are statically linked into those DLLs. Requires MSYS2 make, CMake, pkg-config and MinGW-w64. |
 
@@ -80,3 +80,5 @@ The expanded FFmpeg combination enables `--enable-gpl` because it links x264/x26
 
 See [SOURCES.md](SOURCES.md) for upstream sources, build references, pinned
 dependencies and the preserved license texts in [LICENSES/](LICENSES/).
+
+Apple TV: `tvos-arm64` builds for hardware and `tvos-sim-arm64` for the Apple Silicon simulator. The dedicated `tvos/` podspec links the real engine through the FlutterTV embedder; iOS binaries are never reused for tvOS.

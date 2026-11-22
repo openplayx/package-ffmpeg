@@ -84,10 +84,12 @@ common=(
 )
 extra=()
 case "$target" in
-  macos-*|ios-*)
+  macos-*|ios-*|tvos-*)
     arch="${target##*-}"
     case "$target" in
       macos-*) sdk=macosx; min="-mmacosx-version-min=12.0" ;;
+      tvos-sim-*) sdk=appletvsimulator; min="-target $arch-apple-tvos15.0-simulator" ;;
+      tvos-*) sdk=appletvos; min="-target $arch-apple-tvos15.0" ;;
       ios-sim-*) sdk=iphonesimulator; min="-mios-simulator-version-min=15.0" ;;
       ios-*) sdk=iphoneos; min="-miphoneos-version-min=15.0" ;;
     esac
@@ -160,7 +162,7 @@ case "$target" in
     ;;
   *) echo "unknown target $target" >&2; exit 1 ;;
 esac
-case "$target" in macos-*|ios-*) extra+=(--extra-libs=-lc++) ;; esac
+case "$target" in macos-*|ios-*|tvos-*) extra+=(--extra-libs=-lc++) ;; esac
 
 build="$work/build/$target"
 rm -rf "$build" "$prefix"

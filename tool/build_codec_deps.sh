@@ -20,10 +20,12 @@ cmake_args=(-DCMAKE_BUILD_TYPE=Release -DCMAKE_POLICY_VERSION_MINIMUM=3.5
 cc=cc; cxx=c++; ar=ar; ranlib=ranlib; cflags=-fPIC; ldflags=''
 host=''; vpx_target=generic-gnu; x264_extra=()
 case "$target" in
-  macos-*|ios-*)
+  macos-*|ios-*|tvos-*)
     arch="${target##*-}"
     case "$target" in
       macos-*) sdk=macosx; system=Darwin; min=12.0; deployment=-mmacosx-version-min=$min ;;
+      tvos-sim-*) sdk=appletvsimulator; system=tvOS; min=15.0; deployment="-target $arch-apple-tvos$min-simulator" ;;
+      tvos-*) sdk=appletvos; system=tvOS; min=15.0; deployment="-target $arch-apple-tvos$min" ;;
       ios-sim-*) sdk=iphonesimulator; system=iOS; min=15.0; deployment=-mios-simulator-version-min=$min ;;
       ios-*) sdk=iphoneos; system=iOS; min=15.0; deployment=-miphoneos-version-min=$min ;;
     esac
