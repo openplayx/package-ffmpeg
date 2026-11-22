@@ -31,6 +31,24 @@ android {
     }
     defaultConfig {
         minSdk = 24
+        // Flutter passes the selected device's architecture via target-platform.
+        // Library CMake builds do not inherit the app's ABI selection; otherwise
+        // a run on arm64 also tries to link unused armv7/x86_64 FFmpeg archives.
+        def abiByPlatform = [
+            "android-arm": "armeabi-v7a",
+            "android-arm64": "arm64-v8a",
+            "android-x64": "x86_64",
+        ]
+        def targetPlatforms = project.findProperty("target-platform")
+        if (targetPlatforms != null) {
+            def targetAbis = targetPlatforms.toString().split(",")
+                .collect { abiByPlatform[it.trim()] }.findAll { it != null }
+            if (!targetAbis.isEmpty()) {
+                ndk {
+                    abiFilters.addAll(targetAbis)
+                }
+            }
+        }
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
