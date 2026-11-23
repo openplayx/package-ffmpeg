@@ -87,7 +87,7 @@ void main() {
     expect(caps.available, isTrue);
     expect(caps.encoders, containsAll(['aac', 'mjpeg', 'pcm_s16le']));
     expect(caps.muxers, contains('mp4'));
-    expect(caps.ffmpegVersion, startsWith('7.1'));
+    expect(caps.ffmpegVersion, startsWith('9.1'));
     // ignore: avoid_print
     print('encoders: ${caps.encoders}');
   }, skip: skip);

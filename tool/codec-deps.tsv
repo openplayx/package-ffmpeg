@@ -1,8 +1,8 @@
 # name sha256 source URL (pinned inputs; no system codec discovery)
-aom 1dafde32bc2237bf0570294661ae61db30e818840f77dc4e90d1ebf5a6286664 https://storage.googleapis.com/aom-releases/libaom-3.3.0.tar.gz
-opus 65c1d2f78b9f2fb20082c38cbe47c951ad5839345876e46941612ee87f9a7ce1 https://downloads.xiph.org/releases/opus/opus-1.5.2.tar.gz
-vpx 901747254d80a7937c933d03bd7c5d41e8e6c883e0665fadcb172542167c7977 https://codeload.github.com/webmproject/libvpx/tar.gz/refs/tags/v1.14.1
-mp3lame ddfe36cab873794038ae2c1210557ad34857a4b6bdc515785d1da9e175b1da1e https://downloads.sourceforge.net/project/lame/lame/3.100/lame-3.100.tar.gz
-xml2 c3d8c0c34aa39098f66576fe51969db12a5100b956233dc56506f7a8679be995 https://download.gnome.org/sources/libxml2/2.12/libxml2-2.12.10.tar.xz
-x264 d053c9d86988d6bc78237ca5205865c5ddf99c98ef4cd9927eec8f6d388f6dd9 https://codeload.github.com/mirror/x264/tar.gz/31e19f92f00c7003fa115047ce50978bc98c3a0d
-x265 206329b9599c78d06969a1b7b7bb939f7c99a459ab283b2e93f76854bd34ca7b https://bitbucket.org/multicoreware/x265_git/get/3.6.tar.gz
+aom 12c01dc731ed7b5a999e28120b45bf58a002ba3435a4ba2cfbc1e084a27c9c04 https://storage.googleapis.com/aom-releases/libaom-3.15.3.tar.gz
+opus 6ffcb593207be92584df15b32466ed64bbec99109f007c82205f0194572411a1 https://downloads.xiph.org/releases/opus/opus-1.6.1.tar.gz
+vpx 1020f184046187baa2985dbde38e0691f49c44088bca7a1842b0236c6081dc0a https://codeload.github.com/webmproject/libvpx/tar.gz/refs/tags/v1.17.0
+mp3lame 3df5124d5ad3a98312ffd7ba6a9b36230e4f8a3e66d3ce0f425e336c32d216eb https://downloads.sourceforge.net/project/lame/lame/4.0/lame-4.0.tar.gz
+xml2 98087fd181d9070724f3fbc65c7377db03038eb92bd882374daff44940138821 https://download.gnome.org/sources/libxml2/2.15/libxml2-2.15.4.tar.xz
+x264 cd71a7515b0e9a012e1ac9b1f8415bebcaf6fc97d4db32286642ac4c0fbe24f9 https://codeload.github.com/mirror/x264/tar.gz/b35605ace3ddf7c1a5d67a2eb553f034aef41d55
+x265 0a3d41f6b4e2fe5a49d783d6631bd1a49c44cdf999074a3ff09e2cb71ac8ed33 https://bitbucket.org/multicoreware/x265_git/get/4.2.tar.gz

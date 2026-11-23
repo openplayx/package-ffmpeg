@@ -18,8 +18,8 @@
 ## FFmpeg 上游与固定源码
 
 - 上游：[FFmpeg/FFmpeg](https://github.com/FFmpeg/FFmpeg)。
-- 版本：7.1.1；[源码归档](https://ffmpeg.org/releases/ffmpeg-7.1.1.tar.xz)。
-- SHA-256：`733984395e0dbbe5c046abda2dc49a5544e7e0e1e2366bba849222ae9e3a03b1`。
+- 版本：9.1；[源码归档](https://ffmpeg.org/releases/ffmpeg-9.1.tar.xz)。
+- SHA-256：`1a4d394ae63d190a526cd052eb4415c156b5c5e2df37efab41a7de0b8fde2433`。
 - 本仓库入口：`tool/build_ffmpeg.sh`；桥接实现：`src/opx_media.c`。
 - 上游原始许可说明与 GPL/LGPL 文本保存在 [LICENSES/](LICENSES/)。
 
@@ -32,14 +32,14 @@
 
 | 项目 / 上游 | 固定版本或提交 | 用途 | 上游许可材料 |
 |---|---|---|---|
-| [libaom](https://aomedia.googlesource.com/aom/) | 3.3.0 | AV1 编解码 | BSD 类许可；`LICENSE`、`PATENTS` |
-| [Opus](https://opus-codec.org/) | 1.5.2 | Opus 编解码支持 | BSD 类许可；`COPYING` |
-| [libvpx](https://github.com/webmproject/libvpx) | 1.14.1 | VP8/VP9 编码 | BSD 类许可；`LICENSE`、`PATENTS` |
-| [LAME](https://lame.sourceforge.io/) | 3.100 | MP3 编码 | LGPL；`COPYING`、`LICENSE` |
-| [libxml2](https://gitlab.gnome.org/GNOME/libxml2) | 2.12.10 | DASH XML 解析 | MIT 类许可；`Copyright` |
-| [x264](https://code.videolan.org/videolan/x264) | `31e19f92f00c7003fa115047ce50978bc98c3a0d` | H.264 软件编码 | GPL；`COPYING` 及源码版权声明 |
-| [x265](https://bitbucket.org/multicoreware/x265_git/) | 3.6 | HEVC 软件编码 | GPL；`COPYING` 及各子目录声明 |
-| [zlib](https://github.com/madler/zlib) | Windows 配方固定为 1.3.1；其他平台使用平台提供的 zlib | 压缩支持 | zlib 许可，见归档中的 `zlib.h` |
+| [libaom](https://aomedia.googlesource.com/aom/) | 3.15.3 | AV1 编解码 | BSD 类许可；`LICENSE`、`PATENTS` |
+| [Opus](https://opus-codec.org/) | 1.6.1 | Opus 编解码支持 | BSD 类许可；`COPYING` |
+| [libvpx](https://github.com/webmproject/libvpx) | 1.17.0 | VP8/VP9 编码 | BSD 类许可；`LICENSE`、`PATENTS` |
+| [LAME](https://lame.sourceforge.io/) | 4.0 | MP3 编码 | LGPL；`COPYING`、`LICENSE` |
+| [libxml2](https://gitlab.gnome.org/GNOME/libxml2) | 2.15.4 | DASH XML 解析 | MIT 类许可；`Copyright` |
+| [x264](https://code.videolan.org/videolan/x264) | `b35605ace3ddf7c1a5d67a2eb553f034aef41d55` | H.264 软件编码 | GPL；`COPYING` 及源码版权声明 |
+| [x265](https://bitbucket.org/multicoreware/x265_git/) | 4.2 | HEVC 软件编码 | GPL；`COPYING` 及各子目录声明 |
+| [zlib](https://github.com/madler/zlib) | Windows 配方固定为 1.4；其他平台使用平台提供的 zlib | 压缩支持 | zlib 许可，见归档中的 `zlib.h` |
 
 已核对的上游许可原文保存在 [LICENSES/](LICENSES/)。这些是主要依赖的来源清单，
 不是所有平台产物的完整物料清单；依赖中的子组件仍需保留其原始声明。

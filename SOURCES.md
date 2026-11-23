@@ -23,8 +23,8 @@ references from compiled dependencies and does not relicense third-party source.
 ## FFmpeg upstream and pinned source
 
 - Upstream: [FFmpeg/FFmpeg](https://github.com/FFmpeg/FFmpeg).
-- Version: 7.1.1; [source archive](https://ffmpeg.org/releases/ffmpeg-7.1.1.tar.xz).
-- SHA-256: `733984395e0dbbe5c046abda2dc49a5544e7e0e1e2366bba849222ae9e3a03b1`.
+- Version: 9.1; [source archive](https://ffmpeg.org/releases/ffmpeg-9.1.tar.xz).
+- SHA-256: `1a4d394ae63d190a526cd052eb4415c156b5c5e2df37efab41a7de0b8fde2433`.
 - Build entry point: `tool/build_ffmpeg.sh`; bridge implementation: `src/opx_media.c`.
 - Original upstream licensing notes and GPL/LGPL texts are preserved in [LICENSES/](LICENSES/).
 
@@ -39,14 +39,14 @@ automatically discovering encoder libraries installed on the host.
 
 | Project / upstream | Pinned version or commit | Purpose | Upstream license materials |
 |---|---|---|---|
-| [libaom](https://aomedia.googlesource.com/aom/) | 3.3.0 | AV1 encoding and decoding | BSD-style; `LICENSE`, `PATENTS` |
-| [Opus](https://opus-codec.org/) | 1.5.2 | Opus codec support | BSD-style; `COPYING` |
-| [libvpx](https://github.com/webmproject/libvpx) | 1.14.1 | VP8/VP9 encoding | BSD-style; `LICENSE`, `PATENTS` |
-| [LAME](https://lame.sourceforge.io/) | 3.100 | MP3 encoding | LGPL; `COPYING`, `LICENSE` |
-| [libxml2](https://gitlab.gnome.org/GNOME/libxml2) | 2.12.10 | DASH XML parsing | MIT-style; `Copyright` |
-| [x264](https://code.videolan.org/videolan/x264) | `31e19f92f00c7003fa115047ce50978bc98c3a0d` | H.264 software encoding | GPL; `COPYING` and source copyright notices |
-| [x265](https://bitbucket.org/multicoreware/x265_git/) | 3.6 | HEVC software encoding | GPL; `COPYING` and notices in subdirectories |
-| [zlib](https://github.com/madler/zlib) | Windows recipe pins 1.3.1; other platforms use platform-provided zlib | Compression support | zlib license in the archive's `zlib.h` |
+| [libaom](https://aomedia.googlesource.com/aom/) | 3.15.3 | AV1 encoding and decoding | BSD-style; `LICENSE`, `PATENTS` |
+| [Opus](https://opus-codec.org/) | 1.6.1 | Opus codec support | BSD-style; `COPYING` |
+| [libvpx](https://github.com/webmproject/libvpx) | 1.17.0 | VP8/VP9 encoding | BSD-style; `LICENSE`, `PATENTS` |
+| [LAME](https://lame.sourceforge.io/) | 4.0 | MP3 encoding | LGPL; `COPYING`, `LICENSE` |
+| [libxml2](https://gitlab.gnome.org/GNOME/libxml2) | 2.15.4 | DASH XML parsing | MIT-style; `Copyright` |
+| [x264](https://code.videolan.org/videolan/x264) | `b35605ace3ddf7c1a5d67a2eb553f034aef41d55` | H.264 software encoding | GPL; `COPYING` and source copyright notices |
+| [x265](https://bitbucket.org/multicoreware/x265_git/) | 4.2 | HEVC software encoding | GPL; `COPYING` and notices in subdirectories |
+| [zlib](https://github.com/madler/zlib) | Windows recipe pins 1.4; other platforms use platform-provided zlib | Compression support | zlib license in the archive's `zlib.h` |
 
 Verified original upstream license texts are preserved in [LICENSES/](LICENSES/).
 This is an inventory of major dependency sources, not a complete bill of materials

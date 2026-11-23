@@ -37,7 +37,7 @@ final result = await job.done;                 // validated output, or a MediaEr
 
 ## Building FFmpeg
 
-`bash tool/build_ffmpeg.sh <target>` builds the pinned FFmpeg **7.1.1** (sha256 checked) as trimmed **GPL** libraries into `third_party/ffmpeg/<target>` (git-ignored). It first cross-builds the external dependencies for the same target with `tool/build_codec_deps.sh`. Install CMake, pkg-config and the platform compiler/SDK before building. Downloaded source archives and their SHA-256 checksums are pinned in `tool/codec-deps.tsv`; host-installed codec libraries are not used.
+`bash tool/build_ffmpeg.sh <target>` builds the pinned FFmpeg **9.1** (sha256 checked) as trimmed **GPL** libraries into `third_party/ffmpeg/<target>` (git-ignored). It first cross-builds the external dependencies for the same target with `tool/build_codec_deps.sh`. Install CMake, pkg-config and the platform compiler/SDK before building. Downloaded source archives and their SHA-256 checksums are pinned in `tool/codec-deps.tsv`; host-installed codec libraries are not used.
 
 The expanded build covers the explicitly enabled codec formats in [allenzhang61/build](https://github.com/allenzhang61/build/blob/master/ffmpeg/build.sh):
 

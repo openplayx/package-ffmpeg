@@ -110,7 +110,9 @@ while read -r name checksum url; do
     set -e
     case "$name" in
       aom)
-        build_cmake '' -DENABLE_DOCS=OFF -DENABLE_EXAMPLES=OFF -DENABLE_TESTS=OFF -DENABLE_TOOLS=OFF \
+        # libaom 3.x moved aomenc/aomdec behind ENABLE_APPS; Apple targets
+        # cannot install them as app bundles.
+        build_cmake '' -DENABLE_DOCS=OFF -DENABLE_APPS=OFF -DENABLE_EXAMPLES=OFF -DENABLE_TESTS=OFF -DENABLE_TOOLS=OFF \
           -DCONFIG_PIC=1 -DAOM_TARGET_CPU=generic ;;
       opus)
         build_cmake '' -DOPUS_BUILD_PROGRAMS=OFF -DOPUS_BUILD_TESTING=OFF -DOPUS_INSTALL_PKG_CONFIG_MODULE=ON ;;
@@ -152,7 +154,10 @@ while read -r name checksum url; do
         "$make_cmd" install ;;
       mp3lame)
         cd "$build_dir"
-        args=(--prefix="$prefix" --disable-shared --enable-static --disable-frontend --disable-dependency-tracking --with-pic)
+        # LAME 4 requires libmpg123 for its optional decoder; FFmpeg only uses
+        # LAME to encode and decodes MP3 natively.
+        args=(--prefix="$prefix" --disable-shared --enable-static --disable-frontend --disable-decoder
+          --disable-analyzer-hooks --disable-dependency-tracking --with-pic)
         [ -z "$host" ] || args+=(--host="$host")
         "$source_dir/configure" "${args[@]}"
         "$make_cmd" -j"$jobs"

@@ -15,8 +15,8 @@
 # Output: third_party/ffmpeg/<target>/{include,lib}  (git-ignored)
 set -euo pipefail
 
-FFMPEG_VERSION=7.1.1
-FFMPEG_SHA256=733984395e0dbbe5c046abda2dc49a5544e7e0e1e2366bba849222ae9e3a03b1
+FFMPEG_VERSION=9.1
+FFMPEG_SHA256=1a4d394ae63d190a526cd052eb4415c156b5c5e2df37efab41a7de0b8fde2433
 FFMPEG_URL="https://ffmpeg.org/releases/ffmpeg-${FFMPEG_VERSION}.tar.xz"
 
 target="${1:?usage: build_ffmpeg.sh <target>}"
@@ -70,7 +70,7 @@ common=(
   --enable-static --disable-shared --enable-pic
   --disable-programs --disable-doc --disable-debug
   --disable-autodetect --enable-zlib
-  --disable-avdevice --disable-avfilter --disable-postproc
+  --disable-avdevice --disable-avfilter
   --disable-everything
   --enable-gpl --enable-libaom --enable-libx264 --enable-libx265
   --enable-libvpx --enable-libmp3lame --enable-libopus --enable-libxml2
@@ -127,8 +127,8 @@ case "$target" in
     ;;
   windows-x86_64)
     # zlib (PNG codecs) is not part of MinGW-w64: build a pinned static copy.
-    ZLIB_VERSION=1.3.1
-    ZLIB_SHA256=9a93b2b7dfdac77ceba5a558a580e74667dd6fede4585b91eefb60f03b72df23
+    ZLIB_VERSION=1.4
+    ZLIB_SHA256=02dd159783677a749c04adbdd02b55b8a2bcc7e054f51b76b549199a916ad584
     zlib_tar="$work/src/zlib-$ZLIB_VERSION.tar.gz"
     zlib_prefix="$work/build/zlib-$target"
     if [ ! -f "$zlib_prefix/lib/libz.a" ]; then
