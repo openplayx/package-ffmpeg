@@ -4,7 +4,7 @@
 # libVLC keeps its own statically linked copy with private symbols. The
 # frameworks must exist before CocoaPods integrates them, so they are built
 # at `pod install`.
-system('bash', File.join(__dir__, '..', 'tool', 'ensure_ffmpeg_apple.sh'), 'macos') ||
+system('bash', File.join(File.realpath(__dir__), '..', 'tool', 'ensure_ffmpeg_apple.sh'), 'macos') ||
   raise('Building FFmpeg for macOS failed (tool/ensure_ffmpeg_apple.sh macos)')
 
 Pod::Spec.new do |s|

@@ -1,7 +1,12 @@
-# In-process FFmpeg bridge: compiles the opx_media C ABI and links the
-# pinned, trimmed GPL FFmpeg static libraries into this plugin's framework.
-# Only opx_media_* symbols are exported, so libav symbols cannot clash with
-# libVLC's bundled copy.
+# In-process FFmpeg bridge: compiles the opx_media C ABI against the pinned
+# GPL FFmpeg. FFmpeg is one set of shared frameworks (tvos/Frameworks) that
+# the app embeds once; package-media's libmpv links the same frameworks.
+# libVLC keeps its own statically linked copy. The frameworks (device and
+# simulator slices) must exist before CocoaPods integrates them, so they are
+# built at `pod install`.
+system('bash', File.join(File.realpath(__dir__), '..', 'tool', 'ensure_ffmpeg_apple.sh'), 'tvos') ||
+  raise('Building FFmpeg for tvos failed (tool/ensure_ffmpeg_apple.sh tvos)')
+
 Pod::Spec.new do |s|
   s.name = 'openplayx_ffmpeg'
   s.version = '0.1.0'
@@ -14,8 +19,9 @@ Pod::Spec.new do |s|
   s.tvos.deployment_target = '15.0'
   s.frameworks = 'VideoToolbox', 'CoreMedia', 'CoreVideo', 'CoreFoundation', 'Security', 'AudioToolbox'
   s.libraries = 'z', 'c++'
+  s.vendored_frameworks = 'Frameworks/*.xcframework'
   s.script_phase = {
-    :name => 'Build pinned FFmpeg',
+    :name => 'Check pinned FFmpeg',
     :script => 'bash "${PODS_TARGET_SRCROOT}/../tool/ensure_ffmpeg_apple.sh"',
     :execution_position => :before_compile,
     :always_out_of_date => '1',
@@ -23,13 +29,11 @@ Pod::Spec.new do |s|
   s.pod_target_xcconfig = {
     'DEFINES_MODULE' => 'YES',
     'FRAMEWORK_SEARCH_PATHS' => '$(inherited) "${PODS_ROOT}/../Flutter"',
-    'LIBRARY_SEARCH_PATHS[sdk=appletvos*]' => '"${PODS_TARGET_SRCROOT}/../third_party/ffmpeg/tvos-arm64/lib"',
-    'LIBRARY_SEARCH_PATHS[sdk=appletvsimulator*][arch=arm64]' => '"${PODS_TARGET_SRCROOT}/../third_party/ffmpeg/tvos-sim-arm64/lib"',
-    'LIBRARY_SEARCH_PATHS[sdk=appletvsimulator*][arch=x86_64]' => '"${PODS_TARGET_SRCROOT}/../third_party/ffmpeg/tvos-sim-x86_64/lib"',
+    # Headers are identical across slices.
     'HEADER_SEARCH_PATHS[sdk=appletvos*]' => '"${PODS_TARGET_SRCROOT}/../third_party/ffmpeg/tvos-arm64/include"',
-    'HEADER_SEARCH_PATHS[sdk=appletvsimulator*][arch=arm64]' => '"${PODS_TARGET_SRCROOT}/../third_party/ffmpeg/tvos-sim-arm64/include"',
-    'HEADER_SEARCH_PATHS[sdk=appletvsimulator*][arch=x86_64]' => '"${PODS_TARGET_SRCROOT}/../third_party/ffmpeg/tvos-sim-x86_64/include"',
-    'OTHER_LDFLAGS' => '-lavformat -lavcodec -lswscale -lswresample -lavutil -laom -lx264 -lx265 -lvpx -lmp3lame -lopus -lxml2 -Wl,-exported_symbols_list,"${PODS_TARGET_SRCROOT}/../src/exports.txt"',
+    'HEADER_SEARCH_PATHS[sdk=appletvsimulator*]' => '"${PODS_TARGET_SRCROOT}/../third_party/ffmpeg/tvos-sim-arm64/include"',
+    # Vendored frameworks are only searched for this target: link them.
+    'OTHER_LDFLAGS' => '-framework Avformat -framework Avcodec -framework Avfilter -framework Swscale -framework Swresample -framework Avutil -Wl,-exported_symbols_list,"${PODS_TARGET_SRCROOT}/../src/exports.txt"',
     'GCC_SYMBOLS_PRIVATE_EXTERN' => 'YES',
     'WARNING_CFLAGS' => '-Wno-documentation',
   }

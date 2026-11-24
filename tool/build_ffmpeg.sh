@@ -96,7 +96,7 @@ case "$target" in
       --enable-videotoolbox --enable-audiotoolbox --enable-securetransport
       --enable-encoder=h264_videotoolbox)
     case "$target" in
-      macos-*)
+      macos-*|ios-*|tvos-*)
         # Shared libraries, one copy in the app for opx_media and libmpv;
         # tool/make_apple_frameworks.sh wraps them as frameworks.
         common=("${common[@]/--enable-static/--disable-static}")
@@ -125,6 +125,10 @@ case "$target" in
       --extra-cflags="-I$deps/include" --extra-ldflags="-L$deps/lib -Wl,-z,max-page-size=16384" --extra-libs=-lc++_static
       --enable-jni --enable-mediacodec --enable-encoder=h264_mediacodec)
     [ "$arch" = x86_64 ] && extra+=(--disable-x86asm)
+    # Shared libraries (unversioned sonames on Android), one copy in the APK
+    # for opx_media and libmpv; staged into third_party/ffmpeg/jniLibs/<abi>.
+    common=("${common[@]/--enable-static/--disable-static}")
+    common=("${common[@]/--disable-shared/--enable-shared}")
     ;;
   linux-*)
     extra+=(--extra-cflags="-I$deps/include" --extra-ldflags="-L$deps/lib" --extra-libs=-lstdc++)
@@ -190,5 +194,13 @@ cp "$deps"/lib/*.a "$prefix/lib/"
   echo "target=$target"
   echo "configure=${common[*]} ${extra[*]}"
 } > "$prefix/BUILDINFO"
+if [[ "$target" = android-* ]]; then
+  # Packaged by android/build.gradle (jniLibs) for every library that links them.
+  jni="$work/jniLibs/${target#android-}"
+  rm -rf "$jni" && mkdir -p "$jni"
+  for lib in avutil swresample swscale avcodec avformat avfilter; do
+    cp "$prefix/lib/lib$lib.so" "$jni/"
+  done
+fi
 printf '%s\n' "$fingerprint" > "$prefix/BUILD_FINGERPRINT"
 echo "FFmpeg $FFMPEG_VERSION installed to $prefix"

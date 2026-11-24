@@ -10,3 +10,5 @@ android/.cxx/
 android/.gradle/
 # Generated FFmpeg frameworks (tool/make_apple_frameworks.sh)
 macos/Frameworks/
+ios/Frameworks/
+tvos/Frameworks/

@@ -1,6 +1,7 @@
-# Shared by Android, Linux and Windows. Links the pinned FFmpeg static
-# libraries from tool/build_ffmpeg.sh when present; otherwise builds the
-# stub so the host app still builds and reports the module as unavailable.
+# Shared by Android, Linux and Windows. Links the pinned FFmpeg from
+# tool/build_ffmpeg.sh when present (shared on Android and Windows, static on
+# Linux); otherwise builds the stub so the host app still builds and reports
+# the module as unavailable.
 cmake_minimum_required(VERSION 3.10)
 project(openplayx_ffmpeg_library VERSION 0.1.0 LANGUAGES C CXX)
 
@@ -34,6 +35,17 @@ if(WIN32 AND OPX_FFMPEG_WINDOWS_DLLS)
   if(OPX_FFMPEG_HAS_PARENT)
     set(OPX_FFMPEG_RUNTIME_DLLS ${OPX_FFMPEG_WINDOWS_DLLS} PARENT_SCOPE)
   endif()
+elseif(ANDROID AND EXISTS "${OPX_FFMPEG_PREFIX}/lib/libavformat.so")
+  # Shared FFmpeg (one copy in the APK, also used by libmpv in package-media):
+  # android/build.gradle packages the libraries from third_party/ffmpeg/jniLibs.
+  add_library(openplayx_ffmpeg SHARED "opx_media.c")
+  target_include_directories(openplayx_ffmpeg PRIVATE "${OPX_FFMPEG_PREFIX}/include")
+  foreach(lib avformat avcodec swscale swresample avutil)
+    target_link_libraries(openplayx_ffmpeg PRIVATE "${OPX_FFMPEG_PREFIX}/lib/lib${lib}.so")
+  endforeach()
+  target_link_libraries(openplayx_ffmpeg PRIVATE log m)
+  target_link_options(openplayx_ffmpeg PRIVATE "-Wl,-z,max-page-size=16384"
+    "-Wl,--version-script=${CMAKE_CURRENT_SOURCE_DIR}/exports.map" "-Wl,-Bsymbolic")
 elseif(NOT WIN32 AND EXISTS "${OPX_FFMPEG_PREFIX}/lib/libavformat.a")
   add_library(openplayx_ffmpeg SHARED "opx_media.c")
   target_include_directories(openplayx_ffmpeg PRIVATE "${OPX_FFMPEG_PREFIX}/include")

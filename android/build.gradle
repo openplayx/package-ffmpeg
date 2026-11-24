@@ -50,6 +50,13 @@ android {
             }
         }
     }
+    // FFmpeg's shared libraries (tool/build_ffmpeg.sh android-<abi>), the one
+    // copy in the APK for opx_media and package-media's libmpv.
+    sourceSets {
+        main {
+            jniLibs.srcDirs += ["../third_party/ffmpeg/jniLibs"]
+        }
+    }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
