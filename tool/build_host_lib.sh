@@ -15,6 +15,9 @@ bash "$root/tool/build_ffmpeg.sh" "$target"
 mkdir -p "$root/build/host"
 libs="-L$prefix/lib -lavformat -lavcodec -lswscale -lswresample -lavutil -laom -lx264 -lx265 -lvpx -lmp3lame -lopus -lxml2 -lz"
 if [ "$(uname -s)" = Darwin ]; then
+  # macOS FFmpeg is shared (see build_ffmpeg.sh): link the dylibs, found at
+  # run time through the build prefix.
+  libs="-L$prefix/lib -lavformat -lavcodec -lswscale -lswresample -lavutil -Wl,-rpath,$prefix/lib"
   out="$root/build/host/libopenplayx_ffmpeg.dylib"
   clang -O2 -Wall -fvisibility=hidden -shared -I"$prefix/include" \
     "$root/src/opx_media.c" $libs \

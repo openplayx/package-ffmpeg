@@ -120,7 +120,8 @@ void main() {
       expect(
         caps.decoders,
         containsAll([
-          'libaom-av1',
+          // AV1 is decoded by dav1d; libaom only encodes.
+          'libdav1d',
           'h264',
           'hevc',
           'vp8',

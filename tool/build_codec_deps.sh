@@ -11,6 +11,7 @@ if [ -f "$prefix/BUILD_FINGERPRINT" ] && [ "$(cat "$prefix/BUILD_FINGERPRINT")" 
   exit 0
 fi
 command -v cmake >/dev/null || { echo 'cmake is required' >&2; exit 1; }
+command -v meson >/dev/null || { echo 'meson is required (dav1d)' >&2; exit 1; }
 command -v pkg-config >/dev/null || { echo 'pkg-config is required' >&2; exit 1; }
 jobs="${OPX_BUILD_JOBS:-$(sysctl -n hw.ncpu 2>/dev/null || getconf _NPROCESSORS_ONLN)}"
 mkdir -p "$work/downloads" "$prefix/lib/pkgconfig"
@@ -19,6 +20,8 @@ cmake_args=(-DCMAKE_BUILD_TYPE=Release -DCMAKE_POLICY_VERSION_MINIMUM=3.5
   -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DBUILD_SHARED_LIBS=OFF)
 cc=cc; cxx=c++; ar=ar; ranlib=ranlib; cflags=-fPIC; ldflags=''
 host=''; vpx_target=generic-gnu; x264_extra=()
+# Meson (dav1d) cross description: system, CPU family and CPU.
+meson_system=''; meson_family=''; meson_cpu=''; strip_tool=strip
 case "$target" in
   macos-*|ios-*|tvos-*)
     arch="${target##*-}"
@@ -39,6 +42,9 @@ case "$target" in
       -DCMAKE_C_COMPILER="$cc" -DCMAKE_CXX_COMPILER="$cxx")
     host="$arch-apple-darwin"
     [ "$arch" != arm64 ] || host=aarch64-apple-darwin
+    strip_tool="$(xcrun --sdk "$sdk" -f strip)"
+    meson_system=darwin; meson_cpu="$arch"
+    if [ "$arch" = arm64 ]; then meson_family=aarch64; else meson_family=x86_64; fi
     # generic-gnu uses portable C; mobile builds must not invoke host assemblers.
     ;;
   android-*)
@@ -52,7 +58,13 @@ case "$target" in
       *) exit 1 ;;
     esac
     cc="$tc/${triple}24-clang"; cxx="$tc/${triple}24-clang++"
-    ar="$tc/llvm-ar"; ranlib="$tc/llvm-ranlib"
+    ar="$tc/llvm-ar"; ranlib="$tc/llvm-ranlib"; strip_tool="$tc/llvm-strip"
+    meson_system=android
+    case "$abi" in
+      arm64-v8a) meson_family=aarch64; meson_cpu=aarch64 ;;
+      armeabi-v7a) meson_family=arm; meson_cpu=armv7 ;;
+      x86_64) meson_family=x86_64; meson_cpu=x86_64 ;;
+    esac
     ldflags='-Wl,-z,max-page-size=16384'
     cmake_args+=(-DCMAKE_TOOLCHAIN_FILE="$ndk/build/cmake/android.toolchain.cmake"
       -DANDROID_ABI="$abi" -DANDROID_PLATFORM=android-24 -DANDROID_STL=c++_static)
@@ -152,6 +164,30 @@ while read -r name checksum url; do
         ./configure "${args[@]}"
         "$make_cmd" -j"$jobs"
         "$make_cmd" install ;;
+      dav1d)
+        # AV1 decoding for playback (faster than libaom's decoder).
+        args=(--prefix="$prefix" --libdir=lib --buildtype=release --default-library=static
+          -Db_staticpic=true -Denable_tools=false -Denable_tests=false -Denable_examples=false)
+        if [ -n "$meson_system" ]; then
+          # Cross description instead of CFLAGS: meson ignores them for the host.
+          quote() { local out='' w; for w in $1; do out="$out'$w', "; done; printf '[%s]' "${out%, }"; }
+          {
+            echo "[binaries]"
+            echo "c = '$cc'"; echo "ar = '$ar'"; echo "strip = '$strip_tool'"; echo "pkg-config = 'pkg-config'"
+            echo "[built-in options]"
+            echo "c_args = $(quote "$cflags")"; echo "c_link_args = $(quote "$cflags $ldflags")"
+            echo "[host_machine]"
+            echo "system = '$meson_system'"; echo "cpu_family = '$meson_family'"
+            echo "cpu = '$meson_cpu'"; echo "endian = 'little'"
+          } > "$build_dir/cross.txt"
+          args+=(--cross-file "$build_dir/cross.txt")
+          unset CC CXX CFLAGS CXXFLAGS LDFLAGS CPP
+        fi
+        # x86 assembly needs nasm; without it dav1d uses its C code.
+        case "$target" in *x86_64*) command -v nasm >/dev/null || args+=(-Denable_asm=false) ;; esac
+        meson setup "$build_dir/meson" "$source_dir" "${args[@]}"
+        meson compile -C "$build_dir/meson" -j "$jobs"
+        meson install -C "$build_dir/meson" ;;
       mp3lame)
         cd "$build_dir"
         # LAME 4 requires libmpg123 for its optional decoder; FFmpeg only uses

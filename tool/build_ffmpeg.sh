@@ -53,34 +53,29 @@ if [ ! -d "$src" ]; then
   tar -xJf "$tarball" -C "$work/src"
 fi
 
-# Only what the implemented presets need. Keep this list in sync with
-# lib/src/presets.dart; capabilities are discovered at runtime regardless.
-demuxers=mov,matroska,avi,mpegts,mpegps,flv,asf,wav,mp3,aac,flac,ogg,h264,hevc,av1,ivf,dash
-decoders=h264,hevc,mpeg4,mpeg2video,mpeg1video,vp8,vp9,libaom_av1,vc1,wmv3,msmpeg4v3,mjpeg,png,aac,aac_latm,ac3,eac3,mp3,mp2,flac,opus,vorbis,dca,truehd,alac,wmav2,pcm_s16le,pcm_s24le,pcm_f32le
+# One FFmpeg for both users in the app: the media processing bridge
+# (src/opx_media.c, presets in lib/src/presets.dart) and playback through
+# libmpv (package-media). Playback needs every demuxer, decoder, parser,
+# bitstream filter, protocol and filter; processing adds the encoders and
+# muxers its presets use. x264/x265 make this a GPL build. AV1 is decoded by
+# dav1d; libaom stays for encoding only.
 encoders=png,mjpeg,aac,pcm_s16le,mpeg4,libx264,libx265,libaom_av1,libvpx_vp8,libvpx_vp9,libmp3lame,libopus
 muxers=mp4,ipod,matroska,webm,wav,mp3,flac,ogg,opus,ivf,dash
-parsers=h264,hevc,av1,aac,mpegaudio,ac3,flac,vp8,vp9,mpeg4video,mpegvideo,vc1,opus,vorbis,dca,mjpeg,png
-bsfs=aac_adtstoasc,h264_mp4toannexb,hevc_mp4toannexb,av1_frame_merge,av1_frame_split,extract_extradata,vp9_superframe
-# Loopback session streams only; the bridge additionally whitelists
-# file/http/tcp per open and rejects non-loopback hosts.
-protocols=file,http,tcp
 
 common=(
   --prefix="$prefix"
   --enable-static --disable-shared --enable-pic
   --disable-programs --disable-doc --disable-debug
   --disable-autodetect --enable-zlib
-  --disable-avdevice --disable-avfilter
-  --disable-everything
-  --enable-gpl --enable-libaom --enable-libx264 --enable-libx265
+  --disable-avdevice --disable-indevs --disable-outdevs
+  --enable-avfilter
+  --enable-gpl --enable-libaom --enable-libdav1d --enable-libx264 --enable-libx265
   --enable-libvpx --enable-libmp3lame --enable-libopus --enable-libxml2
   --pkg-config-flags=--static
-  --enable-avformat --enable-avcodec --enable-swscale --enable-swresample
   --enable-network
-  --enable-demuxer="$demuxers" --enable-decoder="$decoders"
-  --enable-encoder="$encoders" --enable-muxer="$muxers"
-  --enable-parser="$parsers" --enable-bsf="$bsfs"
-  --enable-protocol="$protocols"
+  --disable-decoder=libaom_av1
+  --disable-encoders --enable-encoder="$encoders"
+  --disable-muxers --enable-muxer="$muxers"
 )
 extra=()
 case "$target" in
@@ -98,7 +93,17 @@ case "$target" in
     flags="-arch $arch -isysroot $sysroot $min"
     extra+=(--enable-cross-compile --target-os=darwin --arch="$arch" --cc="$cc"
       --extra-cflags="$flags -I$deps/include" --extra-ldflags="$flags -L$deps/lib"
-      --enable-videotoolbox --enable-encoder=h264_videotoolbox)
+      --enable-videotoolbox --enable-audiotoolbox --enable-securetransport
+      --enable-encoder=h264_videotoolbox)
+    case "$target" in
+      macos-*)
+        # Shared libraries, one copy in the app for opx_media and libmpv;
+        # tool/make_apple_frameworks.sh wraps them as frameworks.
+        common=("${common[@]/--enable-static/--disable-static}")
+        common=("${common[@]/--disable-shared/--enable-shared}")
+        # Room for make_apple_frameworks.sh to rewrite the install names.
+        extra+=(--install-name-dir=@rpath --extra-ldflags=-Wl,-headerpad_max_install_names) ;;
+    esac
     [ "$arch" = x86_64 ] && ! command -v nasm >/dev/null && extra+=(--disable-x86asm)
     ;;
   android-*)

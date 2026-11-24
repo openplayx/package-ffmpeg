@@ -1,7 +1,12 @@
-# In-process FFmpeg bridge: compiles the opx_media C ABI and links the
-# pinned, trimmed GPL FFmpeg static libraries into this plugin's framework.
-# Only opx_media_* symbols are exported, so libav symbols cannot clash with
-# libVLC's bundled copy.
+# In-process FFmpeg bridge: compiles the opx_media C ABI against the pinned
+# GPL FFmpeg. FFmpeg is one set of shared frameworks (macos/Frameworks) that
+# the app embeds once; package-media's libmpv links the same frameworks.
+# libVLC keeps its own statically linked copy with private symbols. The
+# frameworks must exist before CocoaPods integrates them, so they are built
+# at `pod install`.
+system('bash', File.join(__dir__, '..', 'tool', 'ensure_ffmpeg_apple.sh'), 'macos') ||
+  raise('Building FFmpeg for macOS failed (tool/ensure_ffmpeg_apple.sh macos)')
+
 Pod::Spec.new do |s|
   s.name = 'openplayx_ffmpeg'
   s.version = '0.1.0'
@@ -15,19 +20,19 @@ Pod::Spec.new do |s|
   s.dependency 'FlutterMacOS'
   s.frameworks = 'VideoToolbox', 'CoreMedia', 'CoreVideo', 'CoreFoundation', 'CoreServices', 'Security', 'AudioToolbox'
   s.libraries = 'z', 'c++'
+  s.vendored_frameworks = 'Frameworks/*.xcframework'
   s.script_phase = {
-    :name => 'Build pinned FFmpeg',
+    :name => 'Check pinned FFmpeg',
     :script => 'bash "${PODS_TARGET_SRCROOT}/../tool/ensure_ffmpeg_apple.sh"',
     :execution_position => :before_compile,
     :always_out_of_date => '1',
   }
   s.pod_target_xcconfig = {
     'DEFINES_MODULE' => 'YES',
-    'LIBRARY_SEARCH_PATHS[arch=arm64]' => '"${PODS_TARGET_SRCROOT}/../third_party/ffmpeg/macos-arm64/lib"',
-    'LIBRARY_SEARCH_PATHS[arch=x86_64]' => '"${PODS_TARGET_SRCROOT}/../third_party/ffmpeg/macos-x86_64/lib"',
     'HEADER_SEARCH_PATHS[arch=arm64]' => '"${PODS_TARGET_SRCROOT}/../third_party/ffmpeg/macos-arm64/include"',
     'HEADER_SEARCH_PATHS[arch=x86_64]' => '"${PODS_TARGET_SRCROOT}/../third_party/ffmpeg/macos-x86_64/include"',
-    'OTHER_LDFLAGS' => '-lavformat -lavcodec -lswscale -lswresample -lavutil -laom -lx264 -lx265 -lvpx -lmp3lame -lopus -lxml2 -Wl,-exported_symbols_list,"${PODS_TARGET_SRCROOT}/../src/exports.txt"',
+    # Vendored frameworks are only searched for this target: link them.
+    'OTHER_LDFLAGS' => '-framework Avformat -framework Avcodec -framework Avfilter -framework Swscale -framework Swresample -framework Avutil -Wl,-exported_symbols_list,"${PODS_TARGET_SRCROOT}/../src/exports.txt"',
     'GCC_SYMBOLS_PRIVATE_EXTERN' => 'YES',
     'WARNING_CFLAGS' => '-Wno-documentation',
   }

@@ -8,3 +8,5 @@ third_party/
 # Android native build caches (CMake/NDK, Gradle)
 android/.cxx/
 android/.gradle/
+# Generated FFmpeg frameworks (tool/make_apple_frameworks.sh)
+macos/Frameworks/
