@@ -37,7 +37,7 @@ final result = await job.done;                 // validated output, or a MediaEr
 
 ## Building FFmpeg
 
-`bash tool/build_ffmpeg.sh <target>` builds the pinned FFmpeg **9.1** (sha256 checked) as trimmed **GPL** libraries into `third_party/ffmpeg/<target>` (git-ignored). It first cross-builds the external dependencies for the same target with `tool/build_codec_deps.sh`. Install CMake, pkg-config and the platform compiler/SDK before building. Downloaded source archives and their SHA-256 checksums are pinned in `tool/codec-deps.tsv`; host-installed codec libraries are not used.
+`bash tool/build_ffmpeg.sh <target>` builds the pinned FFmpeg **9.1** (sha256 checked) as **GPL** shared libraries into `third_party/ffmpeg/<target>` (git-ignored). It is the app's **one FFmpeg**: the processing bridge here and playback through libmpv ([package-media](https://github.com/openplayx/package-media)) link the same libraries, so the build enables every demuxer, decoder, parser, bitstream filter, protocol and filter, plus the encoders and muxers of the processing presets. It first cross-builds the external dependencies for the same target with `tool/build_codec_deps.sh`. Install CMake, pkg-config and the platform compiler/SDK before building. Downloaded source archives and their SHA-256 checksums are pinned in `tool/codec-deps.tsv`; host-installed codec libraries are not used.
 
 The expanded build covers the explicitly enabled codec formats in [allenzhang61/build](https://github.com/allenzhang61/build/blob/master/ffmpeg/build.sh):
 
@@ -45,7 +45,7 @@ The expanded build covers the explicitly enabled codec formats in [allenzhang61/
 |---|---|---|
 | H.264 | FFmpeg native | x264; Apple/Android hardware where available |
 | HEVC / H.265 | FFmpeg native | x265 |
-| AV1 | libaom | libaom |
+| AV1 | dav1d | libaom |
 | VP8 / VP9 | FFmpeg native | libvpx |
 | AAC | FFmpeg native | FFmpeg native (no nonfree FDK dependency) |
 | MP3 | FFmpeg native | LAME |
@@ -59,11 +59,12 @@ New encoders are reported by `capabilities()` and usable by host-owned `MediaPla
 
 | Platform | How it links |
 |---|---|
-| macOS / iOS / tvOS | The podspec compiles the C ABI. A build phase runs `tool/ensure_ffmpeg_apple.sh`, which builds the missing arch on first build. Only `opx_media_*` is exported (`src/exports.txt`), so libav symbols cannot clash with libVLC. |
-| Android / Linux | `src/CMakeLists.txt` links `third_party/ffmpeg/<target>` with a version script that keeps libav symbols private. Without that build it compiles `opx_media_stub.c`, so the app still builds and capabilities report `available: false`. Android needs `ANDROID_NDK_HOME` set for `build_ffmpeg.sh android-<abi>`. |
+| macOS / iOS / tvOS | `tool/ensure_ffmpeg_apple.sh <platform>` (run by the podspec at `pod install`) builds every slice and `tool/make_apple_frameworks.sh` wraps the shared libraries as xcframeworks (`<platform>/Frameworks/Av*.xcframework`, `@rpath` install names) that the podspec vendors. Only `opx_media_*` is exported from the bridge; libVLC keeps its own static copy. |
+| Android | Shared libraries with unversioned sonames, staged into `third_party/ffmpeg/jniLibs/<abi>` and packaged by `android/build.gradle`; `src/CMakeLists.txt` links them. Needs `ANDROID_NDK_HOME`. |
+| Linux | Shared libraries (`$ORIGIN` runpath); real files named by soname are staged in `<prefix>/bundle` and bundled into the app's `lib/` with the bridge. Without a build, `opx_media_stub.c` is compiled and capabilities report `available: false`. |
 | Windows | Links MinGW-built FFmpeg DLLs via import libraries; dependency archives are statically linked into those DLLs. Requires MSYS2 make, CMake, pkg-config and MinGW-w64. |
 
-Verified so far: macOS arm64 (host tests, and an integration test inside the sandboxed app bundle). iOS simulator and Android emulator (arm64-v8a, API 37): the app's `ffmpeg_bridge_test` integration test passes; armeabi-v7a and x86_64 link and package. The Linux and Windows scripts exist but are not yet verified.
+Verified with the shared builds: macOS (host tests; the app's `ffmpeg_bridge_test` and libVLC `playback_test`), Android emulator arm64 (`ffmpeg_bridge_test`), and package-media's libmpv on macOS, iOS simulator, Apple TV simulator, Android emulator and Linux (Ubuntu 24.04 container). Windows keeps its previous DLL build and is not yet verified with the unified configuration (it now also needs meson for dav1d).
 
 ## Tests
 
