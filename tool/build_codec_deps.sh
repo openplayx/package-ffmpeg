@@ -188,6 +188,38 @@ while read -r name checksum url; do
         meson setup "$build_dir/meson" "$source_dir" "${args[@]}"
         meson compile -C "$build_dir/meson" -j "$jobs"
         meson install -C "$build_dir/meson" ;;
+      openmpt)
+        # Tracker modules (MOD, XM, IT, S3M, DMF, GDM, IMF, SFX ...) for
+        # FFmpeg's libopenmpt demuxer. Only the library: no player, no
+        # optional decoders for samples inside modules (zlib, mpg123, Ogg).
+        cd "$build_dir"
+        args=(--prefix="$prefix" --disable-shared --enable-static --with-pic --disable-dependency-tracking
+          --disable-openmpt123 --disable-examples --disable-tests --disable-doxygen-doc
+          --without-zlib --without-mpg123 --without-ogg --without-vorbis --without-vorbisfile
+          --without-portaudio --without-portaudiocpp --without-pulseaudio --without-sndfile --without-flac)
+        [ -z "$host" ] || args+=(--host="$host")
+        "$source_dir/configure" "${args[@]}"
+        "$make_cmd" -j"$jobs"
+        "$make_cmd" install
+        # Its pkg-config file leaves Libs.private empty: static links need
+        # libm, and on Android NDK's static C++ runtime (as for x265).
+        private=-lm
+        case "$target" in android-*) private='-lc++_static -lc++abi -lm -ldl' ;; esac
+        sed "s/^Libs.private:.*/Libs.private: $private/" "$prefix/lib/pkgconfig/libopenmpt.pc" > "$build_dir/libopenmpt.pc"
+        cp "$build_dir/libopenmpt.pc" "$prefix/lib/pkgconfig/libopenmpt.pc" ;;
+      gme)
+        # Game console music (NSF, GYM, SPC, VGM, GBS, HES, KSS, SAP, AY) for
+        # FFmpeg's libgme demuxer. Without zlib: no compressed VGZ.
+        build_cmake '' -DGME_BUILD_SHARED=OFF -DGME_BUILD_STATIC=ON -DGME_BUILD_TESTING=OFF \
+          -DGME_BUILD_EXAMPLES=OFF -DGME_ZLIB=OFF -DGME_ENABLE_UBSAN=OFF
+        case "$target" in
+          android-*)
+            # Its pkg-config file names the shared C++ runtime (-lc++); use
+            # NDK's static one, as for x265.
+            sed 's/^Libs.private:.*/Libs.private: -lc++_static -lc++abi -lm -ldl/' "$prefix/lib/pkgconfig/libgme.pc" > "$build_dir/libgme.pc"
+            cp "$build_dir/libgme.pc" "$prefix/lib/pkgconfig/libgme.pc" ;;
+        esac
+        ;;
       mp3lame)
         cd "$build_dir"
         # LAME 4 requires libmpg123 for its optional decoder; FFmpeg only uses

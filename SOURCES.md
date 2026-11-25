@@ -46,6 +46,8 @@ automatically discovering encoder libraries installed on the host.
 | [libxml2](https://gitlab.gnome.org/GNOME/libxml2) | 2.15.4 | DASH XML parsing | MIT-style; `Copyright` |
 | [x264](https://code.videolan.org/videolan/x264) | `b35605ace3ddf7c1a5d67a2eb553f034aef41d55` | H.264 software encoding | GPL; `COPYING` and source copyright notices |
 | [x265](https://bitbucket.org/multicoreware/x265_git/) | 4.2 | HEVC software encoding | GPL; `COPYING` and notices in subdirectories |
+| [libopenmpt](https://lib.openmpt.org/libopenmpt/) | 0.8.10 | Tracker module playback (MOD, XM, IT, S3M, DMF, GDM, ...) through FFmpeg's libopenmpt demuxer | BSD-3-Clause; `LICENSE` |
+| [Game_Music_Emu (libgme)](https://github.com/libgme/game-music-emu) | 0.6.5 | Game console music playback (NSF, GYM, SPC, VGM, ...) through FFmpeg's libgme demuxer | LGPL 2.1+; `license.txt` |
 | [zlib](https://github.com/madler/zlib) | Windows recipe pins 1.4; other platforms use platform-provided zlib | Compression support | zlib license in the archive's `zlib.h` |
 
 Verified original upstream license texts are preserved in [LICENSES/](LICENSES/).

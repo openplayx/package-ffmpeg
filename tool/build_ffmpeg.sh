@@ -34,7 +34,8 @@ if [ -f "$prefix/lib/libavformat.a" ] || [ -d "$prefix/bin" ]; then
   fi
 fi
 # All external codecs are pinned and built for this target, never discovered
-# from the host's Homebrew installation. x264/x265 make this a GPL build.
+# from the host's Homebrew installation. x264/x265 make this a GPL build;
+# libopenmpt (BSD) and libgme (LGPL 2.1+) add tracker and game console music.
 bash "$root/tool/build_codec_deps.sh" "$target"
 deps="$root/third_party/deps/$target"
 export PKG_CONFIG_LIBDIR="$deps/lib/pkgconfig"
@@ -51,6 +52,15 @@ if [ "${actual%% *}" != "$FFMPEG_SHA256" ]; then
 fi
 if [ ! -d "$src" ]; then
   tar -xJf "$tarball" -C "$work/src"
+fi
+# The libgme and libopenmpt checks hard-code -lstdc++, which Apple SDKs and
+# the Android NDK do not have. Every target already links its own C++
+# runtime through --extra-libs (x265): drop the hard-coded one. Rewritten
+# only while unpatched: another target's build may be running this file.
+if grep -q 'gme_new_emu -lgme -lstdc++\|openmpt_module_create -lstdc++' "$src/configure"; then
+sed -e '/^enabled libgme /,/}/ s/ -lgme -lstdc++;/ -lgme;/' \
+  -e '/^enabled libopenmpt / { s/ openmpt_module_create -lstdc++ / openmpt_module_create /; s/ \&\& append libopenmpt_extralibs "-lstdc++"//; }' \
+  "$src/configure" > "$src/configure.opx.$$" && chmod +x "$src/configure.opx.$$" && mv "$src/configure.opx.$$" "$src/configure"
 fi
 
 # One FFmpeg for both users in the app: the media processing bridge
@@ -71,6 +81,7 @@ common=(
   --enable-avfilter
   --enable-gpl --enable-libaom --enable-libdav1d --enable-libx264 --enable-libx265
   --enable-libvpx --enable-libmp3lame --enable-libopus --enable-libxml2
+  --enable-libopenmpt --enable-libgme
   --pkg-config-flags=--static
   --enable-network
   --disable-decoder=libaom_av1

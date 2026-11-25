@@ -39,6 +39,8 @@
 | [libxml2](https://gitlab.gnome.org/GNOME/libxml2) | 2.15.4 | DASH XML 解析 | MIT 类许可；`Copyright` |
 | [x264](https://code.videolan.org/videolan/x264) | `b35605ace3ddf7c1a5d67a2eb553f034aef41d55` | H.264 软件编码 | GPL；`COPYING` 及源码版权声明 |
 | [x265](https://bitbucket.org/multicoreware/x265_git/) | 4.2 | HEVC 软件编码 | GPL；`COPYING` 及各子目录声明 |
+| [libopenmpt](https://lib.openmpt.org/libopenmpt/) | 0.8.10 | 通过 FFmpeg 的 libopenmpt 解封装器播放模块音乐（MOD、XM、IT、S3M、DMF、GDM 等） | BSD-3-Clause；`LICENSE` |
+| [Game_Music_Emu (libgme)](https://github.com/libgme/game-music-emu) | 0.6.5 | 通过 FFmpeg 的 libgme 解封装器播放游戏机音乐（NSF、GYM、SPC、VGM 等） | LGPL 2.1+；`license.txt` |
 | [zlib](https://github.com/madler/zlib) | Windows 配方固定为 1.4；其他平台使用平台提供的 zlib | 压缩支持 | zlib 许可，见归档中的 `zlib.h` |
 
 已核对的上游许可原文保存在 [LICENSES/](LICENSES/)。这些是主要依赖的来源清单，

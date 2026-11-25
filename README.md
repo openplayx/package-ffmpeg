@@ -51,6 +51,8 @@ The expanded build covers the explicitly enabled codec formats in [allenzhang61/
 | MP3 | FFmpeg native | LAME |
 | Opus | FFmpeg native | libopus |
 
+For playback, libopenmpt decodes tracker modules (MOD, XM, IT, S3M, DMF, GDM, ...) and libgme decodes game console music (NSF, GYM, SPC, VGM, GBS, HES, KSS, SAP, AY; no zlib, so no compressed VGZ); both are demuxers, used by libmpv, not by the processing presets.
+
 Existing MPEG-4, MPEG-2, VC-1, WMV, JPEG/PNG, AC3/EAC3, DTS, FLAC, Vorbis, TrueHD, ALAC and PCM support is retained. Added containers include WebM, Ogg/Opus, IVF and DASH. DASH XML parsing is compiled with libxml2; the current bridge still refuses secondary opens, so segmented DASH manifests are **not exposed as a supported input or output operation**. A separate gateway/plan implementation is needed to use them. HTTPS/GnuTLS and ZeroMQ in the desktop Build script are transport/control features, not imported codec formats; the bridge continues to accept only local files and host-owned loopback HTTP. That script's optional VVC libraries are not part of its guaranteed build and are not bundled here.
 
 New encoders are reported by `capabilities()` and usable by host-owned `MediaPlan`s; the existing user-facing presets are unchanged except for the H.264 software fallback. Compiled codecs do not automatically add new UI presets.
