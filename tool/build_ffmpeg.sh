@@ -134,10 +134,11 @@ case "$target" in
     extra+=(--extra-cflags="-I$deps/include" --extra-ldflags="-L$deps/lib" --extra-libs=-lstdc++)
     command -v nasm >/dev/null || extra+=(--disable-x86asm)
     # Shared libraries bundled next to the app (lib/), one copy for opx_media
-    # and libmpv; they find each other through $ORIGIN.
+    # and libmpv; they find each other through $ORIGIN (set with patchelf
+    # below: configure would expand a $ORIGIN passed in LDFLAGS).
+    command -v patchelf >/dev/null || { echo 'patchelf is required for Linux' >&2; exit 1; }
     common=("${common[@]/--enable-static/--disable-static}")
     common=("${common[@]/--disable-shared/--enable-shared}")
-    extra+=(--extra-ldflags='-Wl,-rpath,$$ORIGIN')
     ;;
   windows-x86_64)
     # zlib (PNG codecs) is not part of MinGW-w64: build a pinned static copy.
@@ -206,6 +207,7 @@ if [[ "$target" = linux-* ]]; then
   for lib in avutil swresample swscale avcodec avformat avfilter; do
     soname="$(cd "$prefix/lib" && ls "lib$lib.so".[0-9]* | awk -F. 'NF==3' | head -1)"
     cp -L "$prefix/lib/$soname" "$prefix/bundle/$soname"
+    patchelf --set-rpath '$ORIGIN' "$prefix/bundle/$soname"
   done
 fi
 if [[ "$target" = android-* ]]; then
