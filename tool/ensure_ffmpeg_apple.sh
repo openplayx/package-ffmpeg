@@ -6,6 +6,19 @@
 # Xcode build phase (PLATFORM_NAME).
 set -euo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"
+# One run at a time: the xcframeworks are rebuilt in place.
+# Parallel callers (test processes running pod install or Gradle side by
+# side) wait here; the next one then finds the build up to date. A lock left
+# by a dead process is taken over.
+lock="$root/third_party/.lock-frameworks"
+mkdir -p "$root/third_party"
+until mkdir "$lock" 2>/dev/null; do
+  holder="$(cat "$lock/pid" 2>/dev/null || true)"
+  if [ -n "$holder" ] && ! kill -0 "$holder" 2>/dev/null; then rm -rf "$lock"; continue; fi
+  sleep 2
+done
+echo $$ > "$lock/pid"
+trap 'rm -rf "$lock"' EXIT
 platform_name="${1:-${PLATFORM_NAME:-macosx}}"
 case "$platform_name" in
   macos|macosx) platform=macos; targets="macos-arm64 macos-x86_64" ;;
