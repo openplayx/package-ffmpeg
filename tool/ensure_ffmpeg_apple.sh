@@ -14,7 +14,9 @@ case "$platform_name" in
   *) echo "unsupported platform $platform_name" >&2; exit 1 ;;
 esac
 # Every slice of the platform: the xcframeworks exist before CocoaPods knows
-# whether the app builds for a device or a simulator.
+# whether the app builds for a device or a simulator. CI release builds can
+# limit them (e.g. OPX_FFMPEG_APPLE_TARGETS="ios-arm64" for a device archive).
+[ -z "${OPX_FFMPEG_APPLE_TARGETS:-}" ] || targets="$OPX_FFMPEG_APPLE_TARGETS"
 for target in $targets; do
   expected="$(bash "$root/tool/build_fingerprint.sh" "$target")"
   stamp="$root/third_party/ffmpeg/$target/BUILD_FINGERPRINT"
@@ -25,4 +27,4 @@ for target in $targets; do
       bash "$root/tool/build_ffmpeg.sh" "$target"
   fi
 done
-bash "$root/tool/make_apple_frameworks.sh" "$platform"
+OPX_FFMPEG_APPLE_TARGETS="$targets" bash "$root/tool/make_apple_frameworks.sh" "$platform"

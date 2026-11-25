@@ -126,7 +126,7 @@ case "$target" in
       --enable-jni --enable-mediacodec --enable-encoder=h264_mediacodec)
     [ "$arch" = x86_64 ] && extra+=(--disable-x86asm)
     # Shared libraries (unversioned sonames on Android), one copy in the APK
-    # for opx_media and libmpv; staged into third_party/ffmpeg/jniLibs/<abi>.
+    # for opx_media and libmpv; staged into <prefix>/jniLibs/<abi>.
     common=("${common[@]/--enable-static/--disable-static}")
     common=("${common[@]/--disable-shared/--enable-shared}")
     ;;
@@ -209,8 +209,9 @@ if [[ "$target" = linux-* ]]; then
   done
 fi
 if [[ "$target" = android-* ]]; then
-  # Packaged by android/build.gradle (jniLibs) for every library that links them.
-  jni="$work/jniLibs/${target#android-}"
+  # Packaged by android/build.gradle (jniLibs). Inside the prefix, so CI caches
+  # of third_party/ffmpeg/<target> restore them too.
+  jni="$prefix/jniLibs/${target#android-}"
   rm -rf "$jni" && mkdir -p "$jni"
   for lib in avutil swresample swscale avcodec avformat avfilter; do
     cp "$prefix/lib/lib$lib.so" "$jni/"

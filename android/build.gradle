@@ -54,7 +54,11 @@ android {
     // copy in the APK for opx_media and package-media's libmpv.
     sourceSets {
         main {
-            jniLibs.srcDirs += ["../third_party/ffmpeg/jniLibs"]
+            // third_party/ffmpeg/android-<abi>/jniLibs/<abi>/lib*.so
+            def ffmpeg = file("../third_party/ffmpeg")
+            if (ffmpeg.isDirectory()) {
+                ffmpeg.eachDirMatch(~/android-.*/) { dir -> jniLibs.srcDirs += [new File(dir, "jniLibs")] }
+            }
         }
     }
     compileOptions {

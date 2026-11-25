@@ -22,6 +22,17 @@ case "$platform" in
   tvos) slices=("device=tvos-arm64" "simulator=tvos-sim-arm64"); min=15.0; plist_min=MinimumOSVersion ;;
   *) echo "unsupported platform $platform" >&2; exit 1 ;;
 esac
+# OPX_FFMPEG_APPLE_TARGETS limits the slices to the targets built.
+if [ -n "${OPX_FFMPEG_APPLE_TARGETS:-}" ]; then
+  kept=()
+  for slice in "${slices[@]}"; do
+    IFS=+ read -r -a ts <<< "${slice#*=}"
+    sel=()
+    for t in "${ts[@]}"; do [[ " $OPX_FFMPEG_APPLE_TARGETS " = *" $t "* ]] && sel+=("$t"); done
+    [ ${#sel[@]} -eq 0 ] || kept+=("${slice%%=*}=$(IFS=+; echo "${sel[*]}")")
+  done
+  slices=("${kept[@]}")
+fi
 targets=()
 for slice in "${slices[@]}"; do IFS=+ read -r -a ts <<< "${slice#*=}"; targets+=("${ts[@]}"); done
 libs=(avutil swresample swscale avcodec avformat avfilter)
