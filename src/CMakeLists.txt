@@ -46,6 +46,24 @@ elseif(ANDROID AND EXISTS "${OPX_FFMPEG_PREFIX}/lib/libavformat.so")
   target_link_libraries(openplayx_ffmpeg PRIVATE log m)
   target_link_options(openplayx_ffmpeg PRIVATE "-Wl,-z,max-page-size=16384"
     "-Wl,--version-script=${CMAKE_CURRENT_SOURCE_DIR}/exports.map" "-Wl,-Bsymbolic")
+elseif(NOT WIN32 AND NOT ANDROID AND EXISTS "${OPX_FFMPEG_PREFIX}/lib/libavformat.so")
+  # Linux: shared FFmpeg bundled in the app's lib/ (linux/CMakeLists.txt), the
+  # one copy for opx_media and package-media's libmpv.
+  add_library(openplayx_ffmpeg SHARED "opx_media.c")
+  target_include_directories(openplayx_ffmpeg PRIVATE "${OPX_FFMPEG_PREFIX}/include")
+  foreach(lib avformat avcodec swscale swresample avutil)
+    target_link_libraries(openplayx_ffmpeg PRIVATE "${OPX_FFMPEG_PREFIX}/lib/lib${lib}.so")
+  endforeach()
+  target_link_libraries(openplayx_ffmpeg PRIVATE m pthread)
+  set_target_properties(openplayx_ffmpeg PROPERTIES BUILD_RPATH "$ORIGIN" INSTALL_RPATH "$ORIGIN")
+  target_link_options(openplayx_ffmpeg PRIVATE
+    "-Wl,--version-script=${CMAKE_CURRENT_SOURCE_DIR}/exports.map" "-Wl,-Bsymbolic")
+  # Real files named by soname (tool/build_ffmpeg.sh stages them).
+  file(GLOB OPX_FFMPEG_LINUX_LIBS "${OPX_FFMPEG_PREFIX}/bundle/lib*.so.*")
+  get_directory_property(OPX_FFMPEG_HAS_PARENT PARENT_DIRECTORY)
+  if(OPX_FFMPEG_HAS_PARENT)
+    set(OPX_FFMPEG_RUNTIME_LIBS ${OPX_FFMPEG_LINUX_LIBS} PARENT_SCOPE)
+  endif()
 elseif(NOT WIN32 AND EXISTS "${OPX_FFMPEG_PREFIX}/lib/libavformat.a")
   add_library(openplayx_ffmpeg SHARED "opx_media.c")
   target_include_directories(openplayx_ffmpeg PRIVATE "${OPX_FFMPEG_PREFIX}/include")

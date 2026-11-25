@@ -133,6 +133,11 @@ case "$target" in
   linux-*)
     extra+=(--extra-cflags="-I$deps/include" --extra-ldflags="-L$deps/lib" --extra-libs=-lstdc++)
     command -v nasm >/dev/null || extra+=(--disable-x86asm)
+    # Shared libraries bundled next to the app (lib/), one copy for opx_media
+    # and libmpv; they find each other through $ORIGIN.
+    common=("${common[@]/--enable-static/--disable-static}")
+    common=("${common[@]/--disable-shared/--enable-shared}")
+    extra+=(--extra-ldflags='-Wl,-rpath,$$ORIGIN')
     ;;
   windows-x86_64)
     # zlib (PNG codecs) is not part of MinGW-w64: build a pinned static copy.
@@ -194,6 +199,15 @@ cp "$deps"/lib/*.a "$prefix/lib/"
   echo "target=$target"
   echo "configure=${common[*]} ${extra[*]}"
 } > "$prefix/BUILDINFO"
+if [[ "$target" = linux-* ]]; then
+  # Real files named by soname (not symlinks), bundled into the app's lib/
+  # by linux/CMakeLists.txt.
+  rm -rf "$prefix/bundle" && mkdir -p "$prefix/bundle"
+  for lib in avutil swresample swscale avcodec avformat avfilter; do
+    soname="$(cd "$prefix/lib" && ls "lib$lib.so".[0-9]* | awk -F. 'NF==3' | head -1)"
+    cp -L "$prefix/lib/$soname" "$prefix/bundle/$soname"
+  done
+fi
 if [[ "$target" = android-* ]]; then
   # Packaged by android/build.gradle (jniLibs) for every library that links them.
   jni="$work/jniLibs/${target#android-}"
