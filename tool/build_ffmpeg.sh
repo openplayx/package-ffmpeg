@@ -161,9 +161,11 @@ case "$target" in
     # are linked in statically, by name: a global -static would also make the
     # linker take static archives for FFmpeg's own libraries (-lavutil) and
     # find another FFmpeg's in MinGW's lib directory (MSYS2's ffmpeg package).
-    # FFmpeg uses Win32 threads (its usual MinGW setup): with pthreads it adds
-    # -lpthread, the DLL import library, next to the static winpthread that
-    # libstdc++ needs, and the link fails on duplicate symbols.
+    # FFmpeg uses Win32 threads (its usual MinGW setup). The codec
+    # dependencies still ask for -lpthread (x265's pkg-config, libstdc++),
+    # which MinGW resolves to winpthread's DLL import library. A static copy
+    # named libpthread.a in the first -L directory is found before it.
+    cp "$(gcc -print-file-name=libwinpthread.a)" "$zlib_prefix/lib/libpthread.a"
     common=("${common[@]/--enable-static/--disable-static}")
     common=("${common[@]/--disable-shared/--enable-shared}")
     # The native compiler needs C:/... paths; Git Bash tools keep /c/... paths.
@@ -172,7 +174,7 @@ case "$target" in
     extra+=(--target-os=mingw32 --arch=x86_64 --cc=gcc --disable-pthreads --enable-w32threads
       --extra-cflags="-I$zlib_native/include -I$deps/include"
       --extra-ldflags="-L$zlib_native/lib -L$deps/lib -static-libgcc"
-      --extra-libs="-Wl,-Bstatic -lstdc++ -lwinpthread -Wl,-Bdynamic")
+      --extra-libs="-Wl,-Bstatic -lstdc++ -Wl,-Bdynamic -lpthread")
     command -v nasm >/dev/null || extra+=(--disable-x86asm)
     # Preferred: MSYS2 bash + make (FFmpeg's documented Windows setup). Without a
     # Unix make, mingw32-make is native and needs C:/... paths in the generated
