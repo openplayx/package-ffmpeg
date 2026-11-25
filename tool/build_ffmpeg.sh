@@ -157,7 +157,10 @@ case "$target" in
         mkdir -p "$zlib_prefix/lib" "$zlib_prefix/include" &&
         cp libz.a "$zlib_prefix/lib/" && cp zlib.h zconf.h "$zlib_prefix/include/")
     fi
-    # Shared instead of static (see header); libgcc/winpthread linked in statically.
+    # Shared instead of static (see header). libgcc, libstdc++ and winpthread
+    # are linked in statically, by name: a global -static would also make the
+    # linker take static archives for FFmpeg's own libraries (-lavutil) and
+    # find another FFmpeg's in MinGW's lib directory (MSYS2's ffmpeg package).
     common=("${common[@]/--enable-static/--disable-static}")
     common=("${common[@]/--disable-shared/--enable-shared}")
     # The native compiler needs C:/... paths; Git Bash tools keep /c/... paths.
@@ -165,7 +168,8 @@ case "$target" in
     command -v cygpath >/dev/null 2>&1 && zlib_native="$(cygpath -m "$zlib_prefix")"
     extra+=(--target-os=mingw32 --arch=x86_64 --cc=gcc
       --extra-cflags="-I$zlib_native/include -I$deps/include"
-      --extra-ldflags="-L$zlib_native/lib -L$deps/lib -static-libgcc -static" --extra-libs=-lstdc++)
+      --extra-ldflags="-L$zlib_native/lib -L$deps/lib -static-libgcc"
+      --extra-libs="-Wl,-Bstatic -lstdc++ -lwinpthread -Wl,-Bdynamic")
     command -v nasm >/dev/null || extra+=(--disable-x86asm)
     # Preferred: MSYS2 bash + make (FFmpeg's documented Windows setup). Without a
     # Unix make, mingw32-make is native and needs C:/... paths in the generated
