@@ -161,12 +161,15 @@ case "$target" in
     # are linked in statically, by name: a global -static would also make the
     # linker take static archives for FFmpeg's own libraries (-lavutil) and
     # find another FFmpeg's in MinGW's lib directory (MSYS2's ffmpeg package).
+    # FFmpeg uses Win32 threads (its usual MinGW setup): with pthreads it adds
+    # -lpthread, the DLL import library, next to the static winpthread that
+    # libstdc++ needs, and the link fails on duplicate symbols.
     common=("${common[@]/--enable-static/--disable-static}")
     common=("${common[@]/--disable-shared/--enable-shared}")
     # The native compiler needs C:/... paths; Git Bash tools keep /c/... paths.
     zlib_native="$zlib_prefix"
     command -v cygpath >/dev/null 2>&1 && zlib_native="$(cygpath -m "$zlib_prefix")"
-    extra+=(--target-os=mingw32 --arch=x86_64 --cc=gcc
+    extra+=(--target-os=mingw32 --arch=x86_64 --cc=gcc --disable-pthreads --enable-w32threads
       --extra-cflags="-I$zlib_native/include -I$deps/include"
       --extra-ldflags="-L$zlib_native/lib -L$deps/lib -static-libgcc"
       --extra-libs="-Wl,-Bstatic -lstdc++ -lwinpthread -Wl,-Bdynamic")
