@@ -61,7 +61,7 @@ New encoders are reported by `capabilities()` and usable by host-owned `MediaPla
 
 | Platform | How it links |
 |---|---|
-| macOS / iOS / tvOS | `tool/ensure_ffmpeg_apple.sh <platform>` (run by the podspec at `pod install`) builds every slice and `tool/make_apple_frameworks.sh` wraps the shared libraries as xcframeworks (`<platform>/Frameworks/Av*.xcframework`, `@rpath` install names) that the podspec vendors. Only `opx_media_*` is exported from the bridge; libVLC keeps its own static copy. |
+| macOS / iOS / tvOS | `tool/ensure_ffmpeg_apple.sh <platform>` (run by the podspec at `pod install`) builds every slice and `tool/make_apple_frameworks.sh` wraps the shared libraries as xcframeworks (`<platform>/Frameworks/Av*.xcframework`, `@rpath` install names) that the podspec vendors. Only `opx_media_*` is exported from the bridge; package-libvlc builds VLCKit against these same frameworks. |
 | Android | Shared libraries with unversioned sonames, staged into `third_party/ffmpeg/jniLibs/<abi>` and packaged by `android/build.gradle`; `src/CMakeLists.txt` links them. Needs `ANDROID_NDK_HOME`. |
 | Linux | Shared libraries (`$ORIGIN` runpath); real files named by soname are staged in `<prefix>/bundle` and bundled into the app's `lib/` with the bridge. Without a build, `opx_media_stub.c` is compiled and capabilities report `available: false`. |
 | Windows | Links MinGW-built FFmpeg DLLs via import libraries; dependency archives are statically linked into those DLLs. Requires MSYS2 make, CMake, pkg-config and MinGW-w64. |

@@ -55,9 +55,8 @@ android {
     sourceSets {
         main {
             // third_party/ffmpeg/android-<abi>/jniLibs/<abi>/lib*.so
-            def ffmpeg = file("../third_party/ffmpeg")
-            if (ffmpeg.isDirectory()) {
-                ffmpeg.eachDirMatch(~/android-.*/) { dir -> jniLibs.srcDirs += [new File(dir, "jniLibs")] }
+            jniLibs.srcDirs = ["arm64-v8a", "armeabi-v7a", "x86_64"].collect {
+                file("../third_party/ffmpeg/android-${it}/jniLibs")
             }
         }
     }

@@ -1,7 +1,7 @@
 # In-process FFmpeg bridge: compiles the opx_media C ABI against the pinned
 # GPL FFmpeg. FFmpeg is one set of shared frameworks (ios/Frameworks) that
 # the app embeds once; package-media's libmpv links the same frameworks.
-# libVLC keeps its own statically linked copy. The frameworks (device and
+# package-libvlc's source-built VLCKit links them too. The frameworks (device and
 # simulator slices) must exist before CocoaPods integrates them, so they are
 # built at `pod install`.
 system('bash', File.join(File.realpath(__dir__), '..', 'tool', 'ensure_ffmpeg_apple.sh'), 'ios') ||
