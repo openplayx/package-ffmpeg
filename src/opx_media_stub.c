@@ -11,8 +11,9 @@ char *opx_media_capabilities(void) {
   const char *text =
       "{\"abi\":1,\"available\":false,\"encoders\":[],\"muxers\":[],"
       "\"decoders\":[]}";
-  char *copy = malloc(strlen(text) + 1);
-  if (copy) strcpy(copy, text);
+  size_t size = strlen(text) + 1;
+  char *copy = malloc(size);
+  if (copy) memcpy(copy, text, size);
   return copy;
 }
 int32_t opx_media_probe(const char *input_json, char **result_json) {

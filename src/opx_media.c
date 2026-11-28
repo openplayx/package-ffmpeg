@@ -98,16 +98,16 @@ static void sb_printf(sbuf *b, const char *fmt, ...) {
 // Writes a JSON string; control characters are escaped, text is truncated.
 static void sb_json(sbuf *b, const char *s) {
   sb_put(b, "\"", 1);
-  size_t count = 0;
-  for (const unsigned char *p = (const unsigned char *)(s ? s : "");
-       *p && count < 200; p++, count++) {
-    if (*p == '"' || *p == '\\') {
-      char esc[2] = {'\\', (char)*p};
+  if (!s) s = "";
+  for (size_t i = 0; s[i] && i < 200; i++) {
+    unsigned char c = (unsigned char)s[i];
+    if (c == '"' || c == '\\') {
+      char esc[2] = {'\\', (char)c};
       sb_put(b, esc, 2);
-    } else if (*p < 0x20) {
-      sb_printf(b, "\\u%04x", *p);
+    } else if (c < 0x20) {
+      sb_printf(b, "\\u%04x", c);
     } else {
-      sb_put(b, (const char *)p, 1);
+      sb_put(b, &s[i], 1);
     }
   }
   sb_put(b, "\"", 1);
@@ -593,7 +593,8 @@ int32_t opx_media_job_create(const char *plan_json, opx_media_job **job) {
       !json_str(plan_json, "input", input, sizeof input) ||
       !json_str(plan_json, "output", output, sizeof output))
     return OPX_E_INVALID_ARGUMENT;
-  if (strcmp(op, "snapshot") && strcmp(op, "remux") && strcmp(op, "transcode"))
+  if (strcmp(op, "snapshot") != 0 && strcmp(op, "remux") != 0 &&
+      strcmp(op, "transcode") != 0)
     return OPX_E_INVALID_ARGUMENT;
   if (!is_absolute_path(output)) return OPX_E_ACCESS_DENIED;
   if (!is_absolute_path(input) && !is_loopback_http(input))
@@ -730,7 +731,7 @@ static int run_snapshot(worker *w) {
   int quality = (int)json_i64(w->plan, "image_quality", 3);
   char codec_name[16] = "mjpeg";
   json_str(w->plan, "image_codec", codec_name, sizeof codec_name);
-  if (strcmp(codec_name, "mjpeg") && strcmp(codec_name, "png"))
+  if (strcmp(codec_name, "mjpeg") != 0 && strcmp(codec_name, "png") != 0)
     return AVERROR(EINVAL);
   if (vindex < 0)
     vindex = av_find_best_stream(w->in, AVMEDIA_TYPE_VIDEO, -1, -1, NULL, 0);
@@ -1397,7 +1398,7 @@ static void *job_main(void *arg)
   w.guard.cancel = &job->cancel;
   int64_t timeout = json_i64(job->plan, "timeout_ms", 0);
   if (timeout > 0) w.guard.deadline = av_gettime_relative() + timeout * 1000;
-  char op[32], input[OPX_MAX_TEXT];
+  char op[32] = {0}, input[OPX_MAX_TEXT] = {0};
   json_str(job->plan, "operation", op, sizeof op);
   json_str(job->plan, "input", input, sizeof input);
   json_str(job->plan, "output", w.output, sizeof w.output);
